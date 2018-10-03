@@ -215,6 +215,18 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
+  /* 3.3.3 Argument Passing code block */
+  char *argv[128]; // 128 byte limit pintos can pass to kernel
+  char argc = 0;
+  char *save_ptr;
+  char *delim = " ";
+
+  // parse string into arguments
+  for (argv[argc] = strtok_r (file_name, delim, &save_ptr);
+      argc < 128 && argv[argc] != NULL;
+      argv[++argc] = strtok_r (NULL, delim, &save_ptr));
+  /* End of 3.3.3 block */
+
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
@@ -222,10 +234,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (argv[0]);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", argv[0]);
       goto done; 
     }
 
@@ -238,7 +250,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      printf ("load: %s: error loading executable\n", argv[0]);
       goto done; 
     }
 
