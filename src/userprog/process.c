@@ -317,6 +317,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (!setup_stack (esp))
     goto done;
 
+  /* 3.3.3 Argument Passing code block */
+  /* push arguments to stack */
+
+  /* end of 3.3.3 block */
+
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
