@@ -88,6 +88,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  while(1){}
   return -1;
 }
 
@@ -241,9 +242,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (argv[0]);
   if (file == NULL) 
     {
+      printf ("i love to fail\n"); // remove
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
@@ -328,6 +330,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   *eip = (void (*) (void)) ehdr.e_entry;
 
   success = true;
+
+  hex_dump(*esp, *esp, 0x50, 1); // remove, only for debugging
 
  done:
   /* We arrive here whether the load is successful or not. */
@@ -468,7 +472,7 @@ setup_stack (void **esp, char **argv, int argc)
           // push words to stack
           for (i = argc - 1; i >= 0; i--)
             {
-              *esp = *esp - strlen(argv[i]);
+              *esp = *esp - strlen(argv[i]) - 1;
               align += strlen(argv[i]) % 4;
               memcpy (*esp, argv[i], strlen(argv[i])+1);
               addr[i] = (uint8_t*)*esp;
