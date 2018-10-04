@@ -88,6 +88,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  while(1){}
   return -1;
 }
 
@@ -195,7 +196,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp);
+static bool setup_stack (void **esp, char **argv, int argc);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -220,9 +221,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
   char argc = 0;
   char *save_ptr;
   char *delim = " ";
+  char *fn_copy;
+
+  // allocate memory and copy file_name to fn_copy
+  fn_copy = palloc_get_page (0);
+  if (fn_copy == NULL)
+    return TID_ERROR;
+  strlcpy (fn_copy, file_name, PGSIZE);
 
   // parse string into arguments
-  for (argv[argc] = strtok_r (file_name, delim, &save_ptr);
+  for (argv[argc] = strtok_r (fn_copy, delim, &save_ptr);
       argc < 128 && argv[argc] != NULL;
       argv[++argc] = strtok_r (NULL, delim, &save_ptr));
   /* End of 3.3.3 block */
@@ -237,7 +245,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   file = filesys_open (argv[0]);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", argv[0]);
+      printf ("i love to fail\n"); // remove
+      printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
 
@@ -250,7 +259,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", argv[0]);
+      printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
 
@@ -314,22 +323,20 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp))
+  if (!setup_stack (esp, argv, argc))
     goto done;
-
-  /* 3.3.3 Argument Passing code block */
-  /* push arguments to stack */
-
-  /* end of 3.3.3 block */
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
   success = true;
 
+  hex_dump(*esp, *esp, 0x50, 1); // remove, only for debugging
+
  done:
   /* We arrive here whether the load is successful or not. */
   file_close (file);
+  palloc_free_page (fn_copy); 
   return success;
 }
 
@@ -444,17 +451,54 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp) 
+setup_stack (void **esp, char **argv, int argc) 
 {
   uint8_t *kpage;
   bool success = false;
+  int align = 0;
+  uint8_t *addr[argc];
+  int i;
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
-        *esp = PHYS_BASE - 12;
+        {
+          *esp = PHYS_BASE;
+          /* 3.3.3 Argument Passing code block */
+          /* push arguments to stack */
+
+          // push words to stack
+          for (i = argc - 1; i >= 0; i--)
+            {
+              *esp = *esp - strlen(argv[i]) - 1;
+              align += strlen(argv[i]) % 4;
+              memcpy (*esp, argv[i], strlen(argv[i])+1);
+              addr[i] = (uint8_t*)*esp;
+            }
+          // align stack
+          for (i = (4 - align) % 4; i > 0; i--)
+            {
+              *esp = *esp - 1;
+              memcpy (*esp, "\0", sizeof(char));
+            }
+          // push addresses of words to stack
+          for (i = argc - 1; i >= 0; i--)
+            {
+              *esp = *esp - 4;
+              (*(uint8_t**)(*esp)) = addr[i];
+            }
+          *esp = *esp - 4;
+          memcpy (*esp, (*esp+4), sizeof(void*));
+          *esp = *esp - 4;
+          memcpy (*esp, &argc, sizeof(int));
+          *esp = *esp - 4;
+          memset (*esp, 0, sizeof(void*));
+
+          /* end of 3.3.3 block */
+
+        }
       else
         palloc_free_page (kpage);
     }
