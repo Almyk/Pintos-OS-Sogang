@@ -324,11 +324,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (!setup_stack (esp, argv, argc))
     goto done;
 
-  /* 3.3.3 Argument Passing code block */
-  /* push arguments to stack */
-
-  /* end of 3.3.3 block */
-
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
@@ -337,6 +332,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
  done:
   /* We arrive here whether the load is successful or not. */
   file_close (file);
+  palloc_free_page (fn_copy); 
   return success;
 }
 
@@ -466,6 +462,9 @@ setup_stack (void **esp, char **argv, int argc)
       if (success)
         {
           *esp = PHYS_BASE;
+          /* 3.3.3 Argument Passing code block */
+          /* push arguments to stack */
+
           // push words to stack
           for (i = argc - 1; i >= 0; i--)
             {
@@ -492,6 +491,8 @@ setup_stack (void **esp, char **argv, int argc)
           memcpy (*esp, &argc, sizeof(int));
           *esp = *esp - 4;
           memset (*esp, 0, sizeof(void*));
+
+          /* end of 3.3.3 block */
 
         }
       else
