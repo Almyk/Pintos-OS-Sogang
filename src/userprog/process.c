@@ -245,7 +245,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   file = filesys_open (argv[0]);
   if (file == NULL) 
     {
-      printf ("i love to fail\n"); // remove
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
