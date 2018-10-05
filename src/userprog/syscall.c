@@ -13,6 +13,8 @@ struct lock filelock;
 
 static void syscall_handler (struct intr_frame *);
 void syshalt(void);
+void sysexit(int status);
+
 
 void
 syscall_init (void) 
@@ -48,7 +50,9 @@ syscall_handler (struct intr_frame *f)
       case SYS_HALT:
                syshalt();  
                break;
-      case SYS_EXIT: break;
+      case SYS_EXIT: 
+               sysexit(); 
+               break;
       case SYS_EXEC: break;
       case SYS_WAIT: break;
       case SYS_CREATE: break;
@@ -70,10 +74,15 @@ syscall_handler (struct intr_frame *f)
   thread_exit ();
 }
 
+/* 3.3.4 SystemCall -- Implementation of each functions */
 void syshalt(){
 
   shutdown_power_off();
 
+}
+
+void sysexit(int status){
+//still implementing...
 }
 
 
