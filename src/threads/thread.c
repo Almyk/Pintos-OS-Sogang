@@ -581,6 +581,26 @@ allocate_tid (void)
 
   return tid;
 }
+
+/* 3.3.4 Syscall process_wait() code block */
+
+struct thread *
+thread_find_by_tid (tid_t tid)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (&all_list); e != list_end (&all_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      if (t->tid == tid) return t;
+    }
+  return NULL;
+}
+
+/* end of 3.3.4 block */
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */

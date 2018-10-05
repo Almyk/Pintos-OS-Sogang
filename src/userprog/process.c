@@ -88,6 +88,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  struct thread *t = thread_find_by_tid (child_tid);
   while(1){}
   return -1;
 }
