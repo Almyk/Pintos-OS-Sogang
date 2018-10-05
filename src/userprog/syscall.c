@@ -4,13 +4,20 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 
+/* 3.3.4 code block */
 #include "threads/vaddr.h"
+#include "threads/synch.h"
+
+struct lock filelock;
+/* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
+
 
 void
 syscall_init (void) 
 {
+  lock_init(&filelock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
@@ -22,17 +29,42 @@ syscall_handler (struct intr_frame *f)
   uint32_t *pd = thread_current ()->pagedir;
   int sysnum = *(int*)esp;
 
+  // check if pointer is valid or not
   if (!is_user_vaddr(esp) || esp == NULL)
     {
       pagedir_destroy (pd);
       thread_exit ();
     }
+
+  // remove : for debugging only
   printf("\n--- syscall_handler ---\n\n");
   printf("esp value: %x\n", esp);
   printf("sysnum : %d\n", sysnum);
   hex_dump(esp, esp, 0x80, 1);
-  /* end of 3.3.4 block */
 
+  // make system call
+  switch(sysnum)
+    {
+      case SYS_HALT: break;
+      case SYS_EXIT: break;
+      case SYS_EXEC: break;
+      case SYS_WAIT: break;
+      case SYS_CREATE: break;
+      case SYS_REMOVE: break;
+      case SYS_OPEN: break;
+      case SYS_FILESIZE: break;
+      case SYS_READ: break;
+      case SYS_WRITE: 
+        lock_acquire(&filelock);
+        printf("Hello, World!\n");
+        lock_release(&filelock);
+        break;
+      case SYS_SEEK: break;
+      case SYS_TELL: break;
+      case SYS_CLOSE: break;
+    }
+  /* end of 3.3.4 block */
   printf ("system call!\n");
   thread_exit ();
 }
+
