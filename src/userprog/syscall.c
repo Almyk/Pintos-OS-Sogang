@@ -12,7 +12,7 @@ struct lock filelock;
 /* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
-
+void syshalt(void);
 
 void
 syscall_init (void) 
@@ -45,7 +45,9 @@ syscall_handler (struct intr_frame *f)
   // make system call
   switch(sysnum)
     {
-      case SYS_HALT: break;
+      case SYS_HALT:
+               syshalt();  
+               break;
       case SYS_EXIT: break;
       case SYS_EXEC: break;
       case SYS_WAIT: break;
@@ -67,4 +69,12 @@ syscall_handler (struct intr_frame *f)
   printf ("system call!\n");
   thread_exit ();
 }
+
+void syshalt(){
+
+  shutdown_power_off();
+
+}
+
+
 
