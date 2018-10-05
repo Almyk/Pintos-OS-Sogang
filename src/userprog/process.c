@@ -88,7 +88,11 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  /* 3.3.4 syscall code block */
   struct thread *t = thread_find_by_tid (child_tid);
+  if(!t) return -1;
+  /* end of 3.3.4 block */
+
   while(1){}
   return -1;
 }
