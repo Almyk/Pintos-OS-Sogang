@@ -7,14 +7,72 @@
 /* 3.3.4 code block */
 #include "threads/vaddr.h"
 #include "threads/synch.h"
+#include "devices/shutdown.h"
 
 struct lock filelock;
 /* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
-void syshalt(void);
-void sysexit(int status);
 
+/* 3.3.4 SystemCall -- Implementation of each functions */
+void
+syshalt (void)
+{
+  shutdown_power_off();
+}
+
+void sysexit (int status)
+{
+  struct thread *t = thread_current();
+  t->status = status;
+  printf("%s: exit(%d)\n", t->name, status);
+  thread_exit();
+}
+
+pid_t sysexec (const char *cmd_line)
+{
+}
+
+int syswait (pid_t pid)
+{
+}
+
+void syscreate(){
+}
+
+void sysremove(){
+}
+
+void sysopen(){
+}
+
+void sysfilesize(){
+}
+
+int sysread(int fd, void *buffer, unsigned size)
+{
+}
+
+int syswrite (int fd, const void *buffer, unsigned size)
+{
+  struct file* f;
+  printf("\n\nsyswrite syscall\n"); // remove: debugging purposes
+  if(fd == 1)
+    {
+      putbuf((char*) buffer, (size_t) size);
+      return size;
+    }
+  return 0;
+}
+
+void sysseek(){
+}
+
+void systell(){
+}
+
+void sysclose(){
+}
 
 void
 syscall_init (void) 
@@ -47,12 +105,8 @@ syscall_handler (struct intr_frame *f)
   // make system call
   switch(sysnum)
     {
-      case SYS_HALT:
-               syshalt();  
-               break;
-      case SYS_EXIT: 
-               sysexit(); 
-               break;
+      case SYS_HALT: syshalt(); break;
+      case SYS_EXIT: sysexit(*(int*)(esp+4)); break;
       case SYS_EXEC: break;
       case SYS_WAIT: break;
       case SYS_CREATE: break;
@@ -61,10 +115,7 @@ syscall_handler (struct intr_frame *f)
       case SYS_FILESIZE: break;
       case SYS_READ: break;
       case SYS_WRITE: 
-        lock_acquire(&filelock);
-        printf("Hello, World!\n");
-        lock_release(&filelock);
-        break;
+        syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_SEEK: break;
       case SYS_TELL: break;
       case SYS_CLOSE: break;
@@ -73,17 +124,3 @@ syscall_handler (struct intr_frame *f)
   printf ("system call!\n");
   thread_exit ();
 }
-
-/* 3.3.4 SystemCall -- Implementation of each functions */
-void syshalt(){
-
-  shutdown_power_off();
-
-}
-
-void sysexit(int status){
-//still implementing...
-}
-
-
-
