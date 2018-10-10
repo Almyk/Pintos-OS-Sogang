@@ -8,6 +8,9 @@
 #include "threads/vaddr.h"
 #include "threads/synch.h"
 #include "devices/shutdown.h"
+#include "devices/input.h"
+#include "userprog/process.h"
+#include "lib/user/syscall.h"
 
 struct lock filelock;
 /* end of 3.3.4 block */
@@ -31,10 +34,12 @@ void sysexit (int status)
 
 pid_t sysexec (const char *cmd_line)
 {
+  return process_execute(cmd_line);
 }
 
 int syswait (pid_t pid)
 {
+  return process_wait(pid);
 }
 
 void syscreate(){
