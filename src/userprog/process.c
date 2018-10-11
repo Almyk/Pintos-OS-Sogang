@@ -18,6 +18,10 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
+/* 3.3.4 syscall code block */
+#include "threads/synch.h"
+/* end of 3.3.4 block */
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -88,7 +92,8 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  while(1){}
+  int i = -1;
+  while(i--) barrier();
   return -1;
 }
 
