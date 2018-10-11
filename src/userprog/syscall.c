@@ -11,6 +11,7 @@
 #include "devices/input.h"
 #include "userprog/process.h"
 #include "lib/user/syscall.h"
+#include "userprog/pagedir.h"
 
 /* end of 3.3.4 block */
 
@@ -61,8 +62,8 @@ sysread(int fd, void *buffer, unsigned size)
 {
   if(fd == 0)
     {
-      int n = 0;
-      while(n++ < size && *(uint8_t *)(buffer + n)= input_getc());
+      unsigned n = 0;
+      while(n++ < size && (*((uint8_t *)buffer + n) = input_getc()));
       return n;
     }
   return -1;
