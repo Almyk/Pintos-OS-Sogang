@@ -12,7 +12,6 @@
 #include "userprog/process.h"
 #include "lib/user/syscall.h"
 
-struct lock filelock;
 /* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
@@ -24,7 +23,8 @@ syshalt (void)
   shutdown_power_off();
 }
 
-void sysexit (int status)
+void
+sysexit (int status)
 {
   struct thread *t = thread_current();
   t->status = status;
@@ -32,12 +32,14 @@ void sysexit (int status)
   thread_exit();
 }
 
-pid_t sysexec (const char *cmd_line)
+pid_t
+sysexec (const char *cmd_line)
 {
   return process_execute(cmd_line);
 }
 
-int syswait (pid_t pid)
+int
+syswait (pid_t pid)
 {
   return process_wait(pid);
 }
@@ -54,13 +56,21 @@ void sysopen(){
 void sysfilesize(){
 }
 
-int sysread(int fd, void *buffer, unsigned size)
+int
+sysread(int fd, void *buffer, unsigned size)
 {
+  if(fd == 0)
+    {
+      int n = 0;
+      while(n++ < size && *(uint8_t *)(buffer + n)= input_getc());
+      return n;
+    }
+  return -1;
 }
 
-int syswrite (int fd, const void *buffer, unsigned size)
+int
+syswrite (int fd, const void *buffer, unsigned size)
 {
-  struct file* f;
   printf("\n\nsyswrite syscall\n"); // remove: debugging purposes
   if(fd == 1)
     {
@@ -82,7 +92,6 @@ void sysclose(){
 void
 syscall_init (void) 
 {
-  lock_init(&filelock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
