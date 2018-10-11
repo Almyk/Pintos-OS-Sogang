@@ -58,7 +58,7 @@ void sysfilesize(){
 }
 
 int
-sysread(int fd, void *buffer, unsigned size)
+sysread (int fd, void *buffer, unsigned size)
 {
   if(fd == 0)
     {
@@ -73,6 +73,7 @@ int
 syswrite (int fd, const void *buffer, unsigned size)
 {
   printf("\n\nsyswrite syscall\n"); // remove: debugging purposes
+  printf("fd: %d\tbuffer: %x\tsize: %u\n", fd, buffer, size);
   if(fd == 1)
     {
       putbuf((char*) buffer, (size_t) size);
@@ -124,20 +125,22 @@ syscall_handler (struct intr_frame *f)
     {
       case SYS_HALT: syshalt(); break;
       case SYS_EXIT: sysexit(*(int*)(esp+4)); break;
-      case SYS_EXEC: break;
-      case SYS_WAIT: break;
+      case SYS_EXEC: sysexec(*(const char*)(esp+4)); break;
+      case SYS_WAIT: syswait(*(int*)(esp+4)); break;
       case SYS_CREATE: break;
       case SYS_REMOVE: break;
       case SYS_OPEN: break;
       case SYS_FILESIZE: break;
-      case SYS_READ: break;
+      case SYS_READ:
+        f->eax = sysread(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_WRITE: 
-        syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
+        f->eax = syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_SEEK: break;
       case SYS_TELL: break;
       case SYS_CLOSE: break;
+      default: sysexit(-1);
     }
   /* end of 3.3.4 block */
-  printf ("system call!\n");
-  thread_exit ();
+  //printf ("system call!\n");
+  //thread_exit ();
 }
