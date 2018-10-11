@@ -42,7 +42,7 @@ sysexec (const char *cmd_line)
 int
 syswait (pid_t pid)
 {
-  return process_wait(pid);
+  return process_wait((tid_t) pid);
 }
 
 void syscreate(){
@@ -101,14 +101,16 @@ syscall_handler (struct intr_frame *f)
 {
   /* 3.3.4 System Calls code block */
   void *esp = f->esp;
-  uint32_t *pd = thread_current ()->pagedir;
   int sysnum = *(int*)esp;
+
+  struct thread *cur = thread_current();
+  uint32_t *pd = cur->pagedir;
 
   // check if pointer is valid or not
   if (!is_user_vaddr(esp) || esp == NULL)
     {
-      pagedir_destroy (pd);
-      thread_exit ();
+      // TODO: more rigourous checking
+      sysexit(-1);
     }
 
   // remove : for debugging only
