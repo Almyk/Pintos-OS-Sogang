@@ -18,6 +18,10 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
+/* 3.3.4 syscall code block */
+#include "threads/synch.h"
+/* end of 3.3.4 block */
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -89,11 +93,9 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
-  struct thread *t = thread_find_by_tid (child_tid);
-  if(!t) return -1;
+  int i = -1;
+  while(i--) barrier();
   /* end of 3.3.4 block */
-
-  while(1){}
   return -1;
 }
 
