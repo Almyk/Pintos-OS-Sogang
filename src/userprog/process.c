@@ -484,7 +484,7 @@ setup_stack (void **esp, char **argv, int argc)
               addr[i] = (uint8_t*)*esp;
             }
           // align stack
-          for (i = (4 - align) % 4; i > 0; i--)
+          for (i = 4 - (align % 4); i > 0; i--)
             {
               *esp = *esp - 1;
               memcpy (*esp, "\0", sizeof(char));

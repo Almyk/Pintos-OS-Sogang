@@ -72,8 +72,8 @@ sysread (int fd, void *buffer, unsigned size)
 int
 syswrite (int fd, const void *buffer, unsigned size)
 {
-  printf("\n\nsyswrite syscall\n"); // remove: debugging purposes
-  printf("fd: %d\tbuffer: %x\tsize: %u\n", fd, buffer, size);
+  //printf("syswrite syscall\n"); // remove: debugging purposes
+  //printf("fd: %d\tbuffer: %x\tsize: %u\n", fd, buffer, size);
   if(fd == 1)
     {
       putbuf((char*) buffer, (size_t) size);
@@ -115,10 +115,10 @@ syscall_handler (struct intr_frame *f)
     }
 
   // remove : for debugging only
-  printf("\n--- syscall_handler ---\n\n");
-  printf("esp value: %x\n", esp);
-  printf("sysnum : %d\n", sysnum);
-  hex_dump(esp, esp, 0x80, 1);
+  //printf("\n--- syscall_handler ---\n\n");
+  //printf("esp value: %x\n", esp);
+  //printf("sysnum : %d\n", sysnum);
+  //hex_dump(esp, esp, 0x80, 1);
 
   // make system call
   switch(sysnum)
