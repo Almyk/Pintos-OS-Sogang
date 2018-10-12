@@ -44,6 +44,9 @@ process_execute (const char *file_name)
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+
+  // make parent wait for child: busywaiting
+  while(thread_current()->waiting == 1) barrier();
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -93,8 +96,8 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
-  int i = -1;
-  while(i--) barrier();
+  //int i = -1;
+  while(thread_current()->waiting) barrier();
   /* end of 3.3.4 block */
   return -1;
 }

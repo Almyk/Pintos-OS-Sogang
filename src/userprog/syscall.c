@@ -33,7 +33,8 @@ sysexit (int status)
   while((name[i] = t->name[i]) != ' ') i++;
   name[i] = '\0';
 
-  t->status = status;
+  //t->status = status;
+  t->parent->waiting = 0;
   printf("%s: exit(%d)\n", name, status);
   thread_exit();
 }
