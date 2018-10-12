@@ -496,7 +496,8 @@ setup_stack (void **esp, char **argv, int argc)
               (*(uint8_t**)(*esp)) = addr[i];
             }
           *esp = *esp - 4;
-          memcpy (*esp, (*esp+4), sizeof(void*));
+          //memcpy (*esp, (esp+4), sizeof(void*));
+          (*(uint8_t**)(*esp)) = *esp+4;
           *esp = *esp - 4;
           memcpy (*esp, &argc, sizeof(int));
           *esp = *esp - 4;
