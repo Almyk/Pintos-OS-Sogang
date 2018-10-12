@@ -79,6 +79,9 @@ syswrite (int fd, const void *buffer, unsigned size)
 {
   //printf("syswrite syscall\n"); // remove: debugging purposes
   //printf("fd: %d\tbuffer: %x\tsize: %u\n", fd, buffer, size);
+
+  if(!is_user_vaddr(buffer+size)) sysexit(-1);
+
   if(fd == 1)
     {
       putbuf((char*) buffer, (size_t) size);
