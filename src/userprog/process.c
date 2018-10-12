@@ -489,6 +489,8 @@ setup_stack (void **esp, char **argv, int argc)
               *esp = *esp - 1;
               memcpy (*esp, "\0", sizeof(char));
             }
+          *esp = *esp - 4;
+          (*(uint8_t**)(*esp)) = (void*)NULL;
           // push addresses of words to stack
           for (i = argc - 1; i >= 0; i--)
             {
