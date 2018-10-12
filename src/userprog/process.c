@@ -24,6 +24,7 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
+void busy_waiting (struct thread*);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -35,6 +36,8 @@ process_execute (const char *file_name)
   char *fn_copy;
   tid_t tid;
 
+  struct thread *parent = thread_current();
+
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
@@ -45,10 +48,11 @@ process_execute (const char *file_name)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
 
+  //busy_waiting(parent);
+  if (tid == TID_ERROR) palloc_free_page (fn_copy); 
+  
   // make parent wait for child: busywaiting
-  while(thread_current()->waiting == 1) barrier();
-  if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+  //while(parent->waiting == 1) barrier();
   return tid;
 }
 
@@ -96,7 +100,7 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
-  while(thread_current()->waiting); //barrier();
+  busy_waiting(thread_current()); 
   /* end of 3.3.4 block */
   return -1;
 }
@@ -534,4 +538,9 @@ install_page (void *upage, void *kpage, bool writable)
      address, then map our page there. */
   return (pagedir_get_page (th->pagedir, upage) == NULL
           && pagedir_set_page (th->pagedir, upage, kpage, writable));
+}
+
+void busy_waiting (struct thread *t)
+{
+  while(t->waiting) thread_yield();
 }

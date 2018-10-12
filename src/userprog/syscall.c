@@ -68,6 +68,7 @@ int
 sysread (int fd, void *buffer, unsigned size)
 {
   if(!is_user_vaddr(buffer+size)) sysexit(-1);
+  if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
 
   if(fd == 0)
     {
@@ -82,10 +83,7 @@ int
 syswrite (int fd, const void *buffer, unsigned size)
 {
   if(!is_user_vaddr(buffer)) sysexit(-1);
-  if(!pagedir_get_page(thread_current()->pagedir, buffer+size))
-    {
-      sysexit(-1);
-    }
+  if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
 
   if(fd == 1)
     {
