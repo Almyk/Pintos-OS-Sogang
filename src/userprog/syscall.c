@@ -29,7 +29,8 @@ sysexit (int status)
 {
   int i = 0;
   struct thread *t = thread_current();
-  char name[sizeof(t->name)];
+  char name[sizeof(t->name)+1];
+
   while((name[i] = t->name[i]) != ' ') i++;
   name[i] = '\0';
 

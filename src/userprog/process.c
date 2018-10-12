@@ -96,8 +96,7 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
-  //int i = -1;
-  while(thread_current()->waiting) barrier();
+  while(thread_current()->waiting); //barrier();
   /* end of 3.3.4 block */
   return -1;
 }
