@@ -27,9 +27,14 @@ syshalt (void)
 void
 sysexit (int status)
 {
+  int i = 0;
   struct thread *t = thread_current();
+  char name[sizeof(t->name)];
+  while((name[i] = t->name[i]) != ' ') i++;
+  name[i] = '\0';
+
   t->status = status;
-  printf("%s: exit(%d)\n", t->name, status);
+  printf("%s: exit(%d)\n", name, status);
   thread_exit();
 }
 
