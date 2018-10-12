@@ -67,6 +67,8 @@ void sysfilesize(){
 int
 sysread (int fd, void *buffer, unsigned size)
 {
+  if(!is_user_vaddr(buffer+size)) sysexit(-1);
+
   if(fd == 0)
     {
       unsigned n = 0;
@@ -79,10 +81,11 @@ sysread (int fd, void *buffer, unsigned size)
 int
 syswrite (int fd, const void *buffer, unsigned size)
 {
-  //printf("syswrite syscall\n"); // remove: debugging purposes
-  //printf("fd: %d\tbuffer: %x\tsize: %u\n", fd, buffer, size);
-
-  if(!is_user_vaddr(buffer+size)) sysexit(-1);
+  if(!is_user_vaddr(buffer)) sysexit(-1);
+  if(!pagedir_get_page(thread_current()->pagedir, buffer+size))
+    {
+      sysexit(-1);
+    }
 
   if(fd == 1)
     {
@@ -111,18 +114,14 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   /* 3.3.4 System Calls code block */
+  
+  // check if pointer is valid or not
+  if (f->esp == NULL || !is_user_vaddr(f->esp)) sysexit(-1);
+  if (!pagedir_get_page(thread_current()->pagedir, f->esp)) sysexit(-1);
+
   void *esp = f->esp;
   int sysnum = *(int*)esp;
-
-  struct thread *cur = thread_current();
-  uint32_t *pd = cur->pagedir;
-
-  // check if pointer is valid or not
-  if (!is_user_vaddr(esp) || esp == NULL)
-    {
-      // TODO: more rigourous checking
-      sysexit(-1);
-    }
+  if(sysnum != SYS_HALT) if(!is_user_vaddr(esp+4)) sysexit(-1);
 
   // remove : for debugging only
   //printf("\n--- syscall_handler ---\n\n");
@@ -151,6 +150,4 @@ syscall_handler (struct intr_frame *f)
       default: sysexit(-1);
     }
   /* end of 3.3.4 block */
-  //printf ("system call!\n");
-  //thread_exit ();
 }
