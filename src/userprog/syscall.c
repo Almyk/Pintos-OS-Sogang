@@ -135,8 +135,8 @@ syscall_handler (struct intr_frame *f)
     {
       case SYS_HALT: syshalt(); break;
       case SYS_EXIT: sysexit(*(int*)(esp+4)); break;
-      case SYS_EXEC: sysexec(*(const char*)(esp+4)); break;
-      case SYS_WAIT: syswait(*(int*)(esp+4)); break;
+      case SYS_EXEC: f->eax = sysexec(*(const char*)(esp+4)); break;
+      case SYS_WAIT: f->eax = syswait(*(int*)(esp+4)); break;
       case SYS_CREATE: break;
       case SYS_REMOVE: break;
       case SYS_OPEN: break;
