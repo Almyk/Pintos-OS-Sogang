@@ -55,24 +55,22 @@ sysexec (const char *cmd_line)
 int
 syswait (pid_t pid)
 {
-  int result;
   struct list_elem *e;
+
+  if(pid == PID_ERROR) return pid;
+
   for(e = list_begin(&wait_child_list);
       e != list_end(&wait_child_list);
       e = list_next(e))
     {
-      if(list_entry(e, struct waitPid, wpelem)->pid == pid) pid = PID_ERROR;
+      if(list_entry(e, struct waitPid, wpelem)->pid == pid)
+        return PID_ERROR;
     }
-  if(pid != PID_ERROR)
-    {
-      struct waitPid * new = palloc_get_page (0);
-      new->pid = pid;
-      list_push_back(&wait_child_list, &new->wpelem);
-      e = &new->wpelem;
-    }
-  result = process_wait((tid_t) pid);
-  if(result > 0) list_remove(e);
-  return result;
+
+  struct waitPid * new = palloc_get_page (0);
+  new->pid = pid;
+  list_push_back(&wait_child_list, &new->wpelem);
+  return process_wait((tid_t) pid);
 }
 
 void syscreate(){
