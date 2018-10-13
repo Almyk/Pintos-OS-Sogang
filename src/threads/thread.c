@@ -167,6 +167,7 @@ thread_create (const char *name, int priority,
                thread_func *function, void *aux) 
 {
   struct thread *t;
+  struct thread *p = thread_current();
   struct kernel_thread_frame *kf;
   struct switch_entry_frame *ef;
   struct switch_threads_frame *sf;
@@ -183,6 +184,14 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+
+  /* project 1 code block */
+  t->parent = p;
+  //t->waiting = 0;
+  list_push_back(&p->childs, &t->celem);
+  if(thread_current() == p) p->waiting += 1; // have to wait for child
+  /* end of proj1 code block */
+  
 
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
@@ -470,6 +479,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+
+  t->waiting = 0;
+  list_init(&t->childs);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

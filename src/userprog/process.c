@@ -48,7 +48,7 @@ process_execute (const char *file_name)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
 
-  //busy_waiting(parent);
+  busy_waiting(parent);
   if (tid == TID_ERROR) palloc_free_page (fn_copy); 
   
   // make parent wait for child: busywaiting
@@ -542,5 +542,5 @@ install_page (void *upage, void *kpage, bool writable)
 
 void busy_waiting (struct thread *t)
 {
-  while(t->waiting) thread_yield();
+  while(t->waiting != 0) thread_yield();
 }

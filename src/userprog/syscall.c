@@ -35,7 +35,7 @@ sysexit (int status)
   name[i] = '\0';
 
   //t->status = status;
-  t->parent->waiting = 0;
+  t->parent->waiting -= 2;
   printf("%s: exit(%d)\n", name, status);
   thread_exit();
 }
