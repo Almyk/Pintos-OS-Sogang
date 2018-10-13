@@ -13,6 +13,11 @@
 #include "lib/user/syscall.h"
 #include "userprog/pagedir.h"
 
+struct list wait_child_list;
+typedef struct waitPid{
+  pid_t pid;
+  struct list_elem wpelem;
+};
 /* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
@@ -50,6 +55,19 @@ sysexec (const char *cmd_line)
 int
 syswait (pid_t pid)
 {
+  struct list_elem *e;
+  for(e = list_begin(&wait_child_list);
+      e != list_end(&wait_child_list);
+      e = list_next(e))
+    {
+      if(list_entry(e, struct waitPid, wpelem)->pid == pid) pid = PID_ERROR;
+    }
+  if(pid != PID_ERROR)
+    {
+      struct waitPid * new = palloc_get_page (0);
+      new->pid = pid;
+      list_push_back(&wait_child_list, &new->wpelem);
+    }
   return process_wait((tid_t) pid);
 }
 
@@ -106,6 +124,7 @@ void sysclose(){
 void
 syscall_init (void) 
 {
+  list_init(&wait_child_list);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
