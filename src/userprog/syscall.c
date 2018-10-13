@@ -55,6 +55,7 @@ sysexec (const char *cmd_line)
 int
 syswait (pid_t pid)
 {
+  int result;
   struct list_elem *e;
   for(e = list_begin(&wait_child_list);
       e != list_end(&wait_child_list);
@@ -67,8 +68,11 @@ syswait (pid_t pid)
       struct waitPid * new = palloc_get_page (0);
       new->pid = pid;
       list_push_back(&wait_child_list, &new->wpelem);
+      e = &new->wpelem;
     }
-  return process_wait((tid_t) pid);
+  result = process_wait((tid_t) pid);
+  if(result > 0) list_remove(e);
+  return result;
 }
 
 void syscreate(){

@@ -112,11 +112,10 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
+  printf("thread_current()->waiting: %d\n", thread_current()->waiting);
   busy_waiting(thread_current()); 
   if(thread_current()->childtid == child_tid && child_tid != TID_ERROR)
-    {
-      return thread_current()->child_exit_status;
-    }
+    return thread_current()->child_exit_status;
   /* end of 3.3.4 block */
   return -1;
 }
