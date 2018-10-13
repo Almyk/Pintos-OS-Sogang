@@ -35,6 +35,9 @@ process_execute (const char *file_name)
 {
   char *fn_copy;
   tid_t tid;
+  char *file_name_;
+  char *filename;
+  int i;
 
   struct thread *parent = thread_current();
 
@@ -45,10 +48,18 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  // check if file_name is correct
+  file_name_ = palloc_get_page (0);
+  if (file_name_ == NULL)
+    return TID_ERROR;
+  strlcpy (file_name_, file_name, PGSIZE);
+  for(i = 0; file_name_[i] != ' ' && file_name_[i] != '\0'; i++);
+  file_name_[i] = '\0';
+  if(!filesys_open(file_name_)) return TID_ERROR;
+
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
 
-  busy_waiting(parent);
   if (tid == TID_ERROR) palloc_free_page (fn_copy); 
   
   // make parent wait for child: busywaiting
@@ -75,7 +86,8 @@ start_process (void *file_name_)
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
-    thread_exit ();
+    sysexit(-1);
+    //thread_exit ();
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -101,6 +113,10 @@ process_wait (tid_t child_tid UNUSED)
 {
   /* 3.3.4 syscall code block */
   busy_waiting(thread_current()); 
+  if(thread_current()->childtid == child_tid && child_tid != TID_ERROR)
+    {
+      return thread_current()->child_exit_status;
+    }
   /* end of 3.3.4 block */
   return -1;
 }
@@ -255,6 +271,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
+  //printf("argv[0]: %s\n", argv[0]);
   file = filesys_open (argv[0]);
   if (file == NULL) 
     {
@@ -542,5 +559,5 @@ install_page (void *upage, void *kpage, bool writable)
 
 void busy_waiting (struct thread *t)
 {
-  while(t->waiting != 0) thread_yield();
+  while(t->waiting > 0) thread_yield();
 }

@@ -34,8 +34,8 @@ sysexit (int status)
   while((name[i] = t->name[i]) != ' ') i++;
   name[i] = '\0';
 
-  //t->status = status;
-  t->parent->waiting -= 2;
+  t->parent->child_exit_status = status;
+  t->parent->waiting -= 1;
   printf("%s: exit(%d)\n", name, status);
   thread_exit();
 }
@@ -43,6 +43,7 @@ sysexit (int status)
 pid_t
 sysexec (const char *cmd_line)
 {
+  if(!is_user_vaddr(cmd_line)) sysexit(-1);
   return process_execute(cmd_line);
 }
 
@@ -132,7 +133,7 @@ syscall_handler (struct intr_frame *f)
     {
       case SYS_HALT: syshalt(); break;
       case SYS_EXIT: sysexit(*(int*)(esp+4)); break;
-      case SYS_EXEC: f->eax = sysexec(*(const char*)(esp+4)); break;
+      case SYS_EXEC: f->eax = sysexec(*(const char**)(esp+4)); break;
       case SYS_WAIT: f->eax = syswait(*(int*)(esp+4)); break;
       case SYS_CREATE: break;
       case SYS_REMOVE: break;

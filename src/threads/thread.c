@@ -173,6 +173,7 @@ thread_create (const char *name, int priority,
   struct switch_threads_frame *sf;
   tid_t tid;
   enum intr_level old_level;
+  static int first = 1;
 
   ASSERT (function != NULL);
 
@@ -187,9 +188,14 @@ thread_create (const char *name, int priority,
 
   /* project 1 code block */
   t->parent = p;
+  p->childtid = tid;
   //t->waiting = 0;
   list_push_back(&p->childs, &t->celem);
-  if(thread_current() == p) p->waiting += 1; // have to wait for child
+  if(thread_current() == p && !first--)
+    {
+      p->waiting += 1; // have to wait for child
+      first = 0;
+    }
   /* end of proj1 code block */
   
 
