@@ -130,35 +130,35 @@ syscall_init (void)
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 /*project1 additional system calls*/
-int pibonacci(int n){
+int
+pibonacci(int n)
+{
   
   int i;
   int f1 = 0;
   int f2 = 1;
   int fn;
     
-    if(n == 1)
-      return 0;
-    if(n == 2)
-      return 1;
+  if(n == 1)
+    return 0;
+  if(n == 2)
+    return 1;
 
-    for(i=3; i<= n; i++){
-     
+  for(i=3; i<= n; i++)
+    {
       fn = f1+ f2;
       f1 = f2;
       f2 = fn;
     }
-
   return fn;
 }
-int sum_of_four_intergers(int a, int b, int c, int d){
 
- int sum;
-
- sum = a+b+c+d;
- return sum;
-
+int
+sum_of_four_integers(int a, int b, int c, int d)
+{
+  return a+b+c+d;
 }
+
 static void
 syscall_handler (struct intr_frame *f) 
 {
@@ -197,8 +197,8 @@ syscall_handler (struct intr_frame *f)
       case SYS_TELL: break;
       case SYS_CLOSE: break;
       /*project 1 additional system calls*/ 
-      case SYS_PIBO: f->eax = pibonacci(*(int *)(esp+4)); break;
-      case SYS_SUM: f->eax = sum_of_four_integers(*(int *)(esp+4), *(int *)(esp+8), *(int *)(esp+12)); break;
+      case SYS_PIBO: f->eax = pibonacci(*(int*)(esp+4)); break;
+      case SYS_SUM: f->eax = sum_of_four_integers(*(int*)(esp+4), *(int*)(esp+8), *(int*)(esp+12), *(int*)(esp+16)); break;
            
       default: sysexit(-1);
     }
