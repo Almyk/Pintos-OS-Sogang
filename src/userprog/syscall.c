@@ -134,16 +134,16 @@ int
 pibonacci(int n)
 {
   int i;
-  int f1 = 1;
+  int f1 = 0;
   int f2 = 1;
   int fn = 0;
     
   if(n == 1) return 1;
   if(n == 2) return 1;
 
-  for (i = 3; i <= n; i++)
+  for (i = 2; i <= n; i++)
     {
-      fn = f1+ f2;
+      fn = f1 + f2;
       f1 = f2;
       f2 = fn;
     }
