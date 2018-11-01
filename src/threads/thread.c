@@ -486,8 +486,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 
+  // proj 1
   t->waiting = 0;
   list_init(&t->childs);
+
+  // proj 2
+  t->fd_cnt = 0;
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

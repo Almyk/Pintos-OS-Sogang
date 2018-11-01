@@ -85,16 +85,23 @@ bool sysremove(const char *file)
 
 int sysopen(const char *file)
 {
-  static int fd = 1;
+  struct thread *curr = thread_current();
   struct file *file_ptr = filesys_open(file);
+  int fd;
   if(!file_ptr) return -1;
-  // TODO: save fd and file_ptr in process structure
-  return ++fd;
+  fd = curr->fd_cnt + 2;
+  curr->fd_cnt++;
+  curr->files[fd] = file_ptr;
+  return fd;
 }
 
 int sysfilesize(int fd)
 {
-  //file_length (struct file *file);
+  struct file *file;
+  struct thread *curr = thread_current();
+  file = curr->files[fd-2];
+  if(!file) return -1;
+  return (int) file_length (file);
 }
 
 int

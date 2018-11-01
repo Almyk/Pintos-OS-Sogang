@@ -103,6 +103,10 @@ struct thread
     int child_exit_status;
     int childtid;
 
+    // files
+    int fd_cnt;
+    struct file *files[128];
+
 #endif
 
     /* Owned by thread.c. */
