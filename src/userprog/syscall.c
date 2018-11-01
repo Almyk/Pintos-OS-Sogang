@@ -78,11 +78,18 @@ bool syscreate(const char *file, unsigned initial_size)
   return filesys_create (file, initial_size);
 }
 
-void sysremove(){
+bool sysremove(const char *file)
+{
+  return filesys_remove (file);
 }
 
-void sysopen()
+int sysopen(const char *file)
 {
+  static int fd = 1;
+  struct file *file_ptr = filesys_open(file);
+  if(!file_ptr) return -1;
+  // TODO: save fd and file_ptr in process structure
+  return ++fd;
 }
 
 int sysfilesize(int fd)
