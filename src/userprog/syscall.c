@@ -73,16 +73,21 @@ syswait (pid_t pid)
   return process_wait((tid_t) pid);
 }
 
-void syscreate(){
+bool syscreate(const char *file, unsigned initial_size)
+{
+  return filesys_create (file, initial_size);
 }
 
 void sysremove(){
 }
 
-void sysopen(){
+void sysopen()
+{
 }
 
-void sysfilesize(){
+int sysfilesize(int fd)
+{
+  //file_length (struct file *file);
 }
 
 int

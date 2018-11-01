@@ -102,6 +102,7 @@ struct thread
     int waiting;
     int child_exit_status;
     int childtid;
+
 #endif
 
     /* Owned by thread.c. */
