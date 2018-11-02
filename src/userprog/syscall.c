@@ -16,6 +16,8 @@
 #include "filesys/filesys.h"
 #include "filesys/file.h"
 
+#define FOUR_INTS(esp) *(int*)((esp)+4), *(int*)((esp)+8), *(int*)((esp)+12), *(int*)((esp)+16)
+
 struct list wait_child_list;
 typedef struct waitPid{
   pid_t pid;
@@ -85,9 +87,12 @@ syscreate (const char *file, unsigned initial_size)
   bool result;
 
   if(!is_user_vaddr(file)) sysexit(-1);
+  if(!file) sysexit(-1);
 
   lock_acquire(&filelock);
+
   result = filesys_create (file, initial_size);
+
   lock_release(&filelock);
   return result;
 }
@@ -106,22 +111,23 @@ sysremove (const char *file)
 }
 
 int
-sysopen(const char *file)
+sysopen (const char *file)
 {
   int fd;
 
   if(!is_user_vaddr(file)) sysexit(-1);
+  if(!file) sysexit(-1);
 
   lock_acquire(&filelock);
   
   struct thread *curr = thread_current();
   struct file *file_ptr = filesys_open(file);
-  if(!file_ptr) fd -1;
+  if(file_ptr == NULL) fd = -1;
   else
     {
       fd = curr->fd_cnt + 2;
       curr->fd_cnt++;
-      curr->files[fd] = file_ptr;
+      curr->files[fd-2] = file_ptr;
     }
 
   lock_release(&filelock);
@@ -152,6 +158,7 @@ sysread (int fd, void *buffer, unsigned size)
 {
   if(!is_user_vaddr(buffer+size)) sysexit(-1);
   if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
+  int success = 0;
 
   if(fd == 0)
     {
@@ -159,9 +166,18 @@ sysread (int fd, void *buffer, unsigned size)
       while(n++ < size && (*((uint8_t *)buffer + n) = input_getc()));
       return n;
     }
-  // TODO: handle files
   else
     {
+      lock_acquire(&filelock);
+
+      struct thread *curr = thread_current();
+      struct file *file = curr->files[fd-2];
+      if(!file) return -1;
+      success = file_read(file, buffer, size);
+
+      lock_release(&filelock);
+
+      return success;
     }
   return -1;
 }
@@ -271,7 +287,7 @@ syscall_handler (struct intr_frame *f)
       case SYS_OPEN: f->eax = sysopen(*(const char**)(esp+4)); break;
       case SYS_FILESIZE: f->eax = sysfilesize(*(int*)(esp+4)); break;
       case SYS_READ:
-        f->eax = sysread(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
+        f->eax = sysread(*(int*)(esp+4), *(void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_WRITE: 
         f->eax = syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_SEEK: break;
@@ -279,8 +295,7 @@ syscall_handler (struct intr_frame *f)
       case SYS_CLOSE: sysclose(*(int*)(esp+4)); break;
       /*project 1 additional system calls*/ 
       case SYS_PIBO: f->eax = pibonacci(*(int*)(esp+4)); break;
-      case SYS_SUM: f->eax = sum_of_four_integers(*(int*)(esp+4), *(int*)(esp+8), *(int*)(esp+12), *(int*)(esp+16)); break;
-           
+      case SYS_SUM: f->eax = sum_of_four_integers(FOUR_INTS(esp)); break;
       default: sysexit(-1);
     }
   /* end of 3.3.4 block */
