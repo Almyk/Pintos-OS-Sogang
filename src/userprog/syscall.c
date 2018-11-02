@@ -13,11 +13,17 @@
 #include "lib/user/syscall.h"
 #include "userprog/pagedir.h"
 
+#include "filesys/filesys.h"
+#include "filesys/file.h"
+
 struct list wait_child_list;
 typedef struct waitPid{
   pid_t pid;
   struct list_elem wpelem;
 };
+
+struct lock filelock;
+
 /* end of 3.3.4 block */
 
 static void syscall_handler (struct intr_frame *);
@@ -73,39 +79,72 @@ syswait (pid_t pid)
   return process_wait((tid_t) pid);
 }
 
-bool syscreate(const char *file, unsigned initial_size)
+bool
+syscreate (const char *file, unsigned initial_size)
 {
-  // TODO: add lock/semaphore functionality
-  return filesys_create (file, initial_size);
+  bool result;
+
+  if(!is_user_vaddr(file)) sysexit(-1);
+
+  lock_acquire(&filelock);
+  result = filesys_create (file, initial_size);
+  lock_release(&filelock);
+  return result;
 }
 
-bool sysremove(const char *file)
+bool
+sysremove (const char *file)
 {
-  // TODO: add lock/semaphore functionality
-  return filesys_remove (file);
+  bool result;
+
+  if(!is_user_vaddr(file)) sysexit(-1);
+
+  lock_acquire(&filelock);
+  result = filesys_remove (file);
+  lock_release(&filelock);
+  return result;
 }
 
-int sysopen(const char *file)
+int
+sysopen(const char *file)
 {
-  // TODO: add lock/semaphore functionality
+  int fd;
+
+  if(!is_user_vaddr(file)) sysexit(-1);
+
+  lock_acquire(&filelock);
+  
   struct thread *curr = thread_current();
   struct file *file_ptr = filesys_open(file);
-  int fd;
-  if(!file_ptr) return -1;
-  fd = curr->fd_cnt + 2;
-  curr->fd_cnt++;
-  curr->files[fd] = file_ptr;
+  if(!file_ptr) fd -1;
+  else
+    {
+      fd = curr->fd_cnt + 2;
+      curr->fd_cnt++;
+      curr->files[fd] = file_ptr;
+    }
+
+  lock_release(&filelock);
+
   return fd;
 }
 
-int sysfilesize(int fd)
+int
+sysfilesize (int fd)
 {
-  // TODO: add lock/semaphore functionality
   struct file *file;
+  int result;
+
+  lock_acquire(&filelock);
+
   struct thread *curr = thread_current();
   file = curr->files[fd-2];
-  if(!file) return -1;
-  return (int) file_length (file);
+  if(!file) result = -1;
+  else result = (int) file_length (file);
+
+  lock_release(&filelock);
+
+  return result;
 }
 
 int
@@ -119,6 +158,10 @@ sysread (int fd, void *buffer, unsigned size)
       unsigned n = 0;
       while(n++ < size && (*((uint8_t *)buffer + n) = input_getc()));
       return n;
+    }
+  // TODO: handle files
+  else
+    {
     }
   return -1;
 }
@@ -134,6 +177,10 @@ syswrite (int fd, const void *buffer, unsigned size)
       putbuf((char*) buffer, (size_t) size);
       return size;
     }
+  // TODO: handle files
+  else
+    {
+    }
   return 0;
 }
 
@@ -143,15 +190,21 @@ void sysseek(){
 void systell(){
 }
 
-void sysclose(){
+void
+sysclose (int fd)
+{
+  lock_acquire(&filelock);
+
+  struct thread *curr = thread_current();
+  struct file *file = curr->files[fd-2];
+  if(file)
+    {
+      file_close(file);
+    }
+
+  lock_release(&filelock);
 }
 
-void
-syscall_init (void) 
-{
-  list_init(&wait_child_list);
-  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-}
 /*project1 additional system calls*/
 int
 pibonacci(int n)
@@ -177,6 +230,14 @@ int
 sum_of_four_integers(int a, int b, int c, int d)
 {
   return a+b+c+d;
+}
+
+void
+syscall_init (void) 
+{
+  list_init(&wait_child_list);
+  lock_init(&filelock);
+  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
 static void
@@ -205,17 +266,17 @@ syscall_handler (struct intr_frame *f)
       case SYS_EXIT: sysexit(*(int*)(esp+4)); break;
       case SYS_EXEC: f->eax = sysexec(*(const char**)(esp+4)); break;
       case SYS_WAIT: f->eax = syswait(*(int*)(esp+4)); break;
-      case SYS_CREATE: break;
-      case SYS_REMOVE: break;
-      case SYS_OPEN: break;
-      case SYS_FILESIZE: break;
+      case SYS_CREATE: f->eax = syscreate(*(const char**)(esp+4), *(unsigned*)(esp+8)); break;
+      case SYS_REMOVE: f->eax = sysremove(*(const char**)(esp+4)); break;
+      case SYS_OPEN: f->eax = sysopen(*(const char**)(esp+4)); break;
+      case SYS_FILESIZE: f->eax = sysfilesize(*(int*)(esp+4)); break;
       case SYS_READ:
         f->eax = sysread(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_WRITE: 
         f->eax = syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_SEEK: break;
       case SYS_TELL: break;
-      case SYS_CLOSE: break;
+      case SYS_CLOSE: sysclose(*(int*)(esp+4)); break;
       /*project 1 additional system calls*/ 
       case SYS_PIBO: f->eax = pibonacci(*(int*)(esp+4)); break;
       case SYS_SUM: f->eax = sum_of_four_integers(*(int*)(esp+4), *(int*)(esp+8), *(int*)(esp+12), *(int*)(esp+16)); break;
