@@ -208,10 +208,31 @@ syswrite (int fd, const void *buffer, unsigned size)
   return success;
 }
 
-void sysseek(){
+void
+sysseek(int fd, unsigned position)
+{
+  lock_acquire(&filelock);
+
+  struct thread *curr = thread_current();
+  struct file *file = curr->files[fd-2];
+  file_seek(file, position);
+
+  lock_release(&filelock);
 }
 
-void systell(){
+unsigned
+systell(int fd)
+{
+  lock_acquire(&filelock);
+
+  struct thread *curr = thread_current();
+  struct file *file = curr->files[fd-2];
+  unsigned result;
+  result = file_tell(file);
+
+  lock_release(&filelock);
+
+  return result;
 }
 
 void
@@ -224,6 +245,7 @@ sysclose (int fd)
   if(file)
     {
       file_close(file);
+      curr->files[fd-2] = NULL;
     }
 
   lock_release(&filelock);
