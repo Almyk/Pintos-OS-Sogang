@@ -188,16 +188,24 @@ syswrite (int fd, const void *buffer, unsigned size)
   if(!is_user_vaddr(buffer)) sysexit(-1);
   if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
 
+  int success = 0;
+
   if(fd == 1)
     {
       putbuf((char*) buffer, (size_t) size);
       return size;
     }
-  // TODO: handle files
   else
     {
+      lock_acquire(&filelock);
+
+      struct thread *curr = thread_current();
+      struct file *file = curr->files[fd-2];
+      if(file) success = file_write(file, buffer, size);
+
+      lock_release(&filelock);
     }
-  return 0;
+  return success;
 }
 
 void sysseek(){
