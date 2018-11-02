@@ -75,16 +75,19 @@ syswait (pid_t pid)
 
 bool syscreate(const char *file, unsigned initial_size)
 {
+  // TODO: add lock/semaphore functionality
   return filesys_create (file, initial_size);
 }
 
 bool sysremove(const char *file)
 {
+  // TODO: add lock/semaphore functionality
   return filesys_remove (file);
 }
 
 int sysopen(const char *file)
 {
+  // TODO: add lock/semaphore functionality
   struct thread *curr = thread_current();
   struct file *file_ptr = filesys_open(file);
   int fd;
@@ -97,6 +100,7 @@ int sysopen(const char *file)
 
 int sysfilesize(int fd)
 {
+  // TODO: add lock/semaphore functionality
   struct file *file;
   struct thread *curr = thread_current();
   file = curr->files[fd-2];
