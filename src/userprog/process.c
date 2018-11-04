@@ -112,11 +112,19 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
+  struct thread *curr = thread_current();
+  struct thread *child = find_child_by_tid(child_tid);
 
-  busy_waiting(thread_current()); 
+  if(!child) return -1;
+
+  //busy_waiting(thread_current()); 
+  sema_down(&child->sema);
 
   if(thread_current()->childtid == child_tid || child_tid != TID_ERROR)
-    return thread_current()->child_exit_status;
+    {
+      //list_remove(&child->celem);
+      return thread_current()->child_exit_status;
+    }
 
   /* end of 3.3.4 block */
   return -1;
@@ -561,4 +569,20 @@ install_page (void *upage, void *kpage, bool writable)
 void busy_waiting (struct thread *t)
 {
   while(t->waiting > 0) thread_yield();
+}
+
+struct thread *
+find_child_by_tid(tid_t child_tid)
+{
+  struct thread *curr = thread_current();
+  struct list_elem *e;
+
+  for(e = list_begin(&curr->childs);
+      e != list_end(&curr->childs);
+      e = list_next(e))
+    {
+      if(list_entry(e, struct thread, celem)->tid == child_tid)
+        return list_entry(e, struct thread, celem);
+    }
+  return NULL;
 }

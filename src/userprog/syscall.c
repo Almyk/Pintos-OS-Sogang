@@ -49,6 +49,7 @@ sysexit (int status)
 
   t->parent->child_exit_status = status;
   t->parent->waiting -= 1;
+  sema_up(&t->sema);
   printf("%s: exit(%d)\n", name, status);
   thread_exit();
 }
@@ -64,8 +65,17 @@ int
 syswait (pid_t pid)
 {
   struct list_elem *e;
+  if(pid == PID_ERROR) return PID_ERROR;
 
-  if(pid == PID_ERROR) return pid;
+  /*
+  struct thread *child = find_child_by_tid((tid_t) pid);
+  //if(!child)printf("child does not exit\n");
+  //printf("child pid: %d\n", pid);
+  //printf("child->waited: %d\n", child->waited);
+  if(!child) return PID_ERROR;
+  if(child->waited) return PID_ERROR;
+  child->waited = 1;
+  */
 
   for(e = list_begin(&wait_child_list);
       e != list_end(&wait_child_list);
@@ -78,6 +88,7 @@ syswait (pid_t pid)
   struct waitPid * new = palloc_get_page (0);
   new->pid = pid;
   list_push_back(&wait_child_list, &new->wpelem);
+
   return process_wait((tid_t) pid);
 }
 

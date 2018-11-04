@@ -492,6 +492,8 @@ init_thread (struct thread *t, const char *name, int priority)
 
   // proj 2
   t->fd_cnt = 0;
+  sema_init(&t->sema, 0);
+  t->waited = 0;
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
