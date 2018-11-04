@@ -286,12 +286,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Open executable file. */
   lock_acquire(&filelock);
   file = filesys_open (argv[0]);
-  lock_release(&filelock);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
+      lock_release(&filelock);
       goto done; 
     }
+
+  t->exe_file = file_reopen(file);
+  file_deny_write(t->exe_file);
+  lock_release(&filelock);
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr

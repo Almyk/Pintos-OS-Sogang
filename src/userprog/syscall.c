@@ -124,9 +124,9 @@ sysopen (const char *file)
   if(file_ptr == NULL) fd = -1;
   else
     {
-      fd = curr->fd_cnt + 2;
-      curr->fd_cnt++;
-      curr->files[fd-2] = file_ptr;
+      fd = curr->fd_i;
+      curr->files[fd] = file_ptr;
+      curr->fd_i++;
     }
 
   lock_release(&filelock);
@@ -143,7 +143,7 @@ sysfilesize (int fd)
   lock_acquire(&filelock);
 
   struct thread *curr = thread_current();
-  file = curr->files[fd-2];
+  file = curr->files[fd];
   if(!file) result = -1;
   else result = (int) file_length (file);
 
@@ -170,7 +170,7 @@ sysread (int fd, void *buffer, unsigned size)
       lock_acquire(&filelock);
 
       struct thread *curr = thread_current();
-      struct file *file = curr->files[fd-2];
+      struct file *file = curr->files[fd];
       if(!file) return -1;
       success = file_read(file, buffer, size);
 
@@ -199,7 +199,7 @@ syswrite (int fd, const void *buffer, unsigned size)
       lock_acquire(&filelock);
 
       struct thread *curr = thread_current();
-      struct file *file = curr->files[fd-2];
+      struct file *file = curr->files[fd];
       if(file) success = file_write(file, buffer, size);
 
       lock_release(&filelock);
@@ -213,7 +213,7 @@ sysseek(int fd, unsigned position)
   lock_acquire(&filelock);
 
   struct thread *curr = thread_current();
-  struct file *file = curr->files[fd-2];
+  struct file *file = curr->files[fd];
   file_seek(file, position);
 
   lock_release(&filelock);
@@ -225,7 +225,7 @@ systell(int fd)
   lock_acquire(&filelock);
 
   struct thread *curr = thread_current();
-  struct file *file = curr->files[fd-2];
+  struct file *file = curr->files[fd];
   unsigned result;
   result = file_tell(file);
 
@@ -240,11 +240,11 @@ sysclose (int fd)
   lock_acquire(&filelock);
 
   struct thread *curr = thread_current();
-  struct file *file = curr->files[fd-2];
+  struct file *file = curr->files[fd];
   if(file)
     {
       file_close(file);
-      curr->files[fd-2] = NULL;
+      curr->files[fd] = NULL;
     }
 
   lock_release(&filelock);

@@ -104,8 +104,9 @@ struct thread
     int exit_status;
 
     // files
-    int fd_cnt;
-    struct file *files[128];
+    int fd_i; // file descriptor index
+    struct file **files;
+    struct file *exe_file; // currently executing file
 
     // semaphores
     struct semaphore sema_w; // syswait

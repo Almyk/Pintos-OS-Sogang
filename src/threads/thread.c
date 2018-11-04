@@ -189,6 +189,11 @@ thread_create (const char *name, int priority,
   /* project 1 code block */
   t->parent = p;
   list_push_back(&p->childs, &t->celem);
+
+  t->files = palloc_get_page(PAL_ZERO);
+  if (t->files == NULL)
+    return TID_ERROR;
+  t->files -= 2;
   /* end of proj1 code block */
   
 
@@ -483,11 +488,12 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->childs);
 
   // proj 2
-  t->fd_cnt = 0;
-  sema_init(&t->sema_w, 0);
-  sema_init(&t->sema_e, 0);
+  t->fd_i = 2;
+  t->exe_file = NULL;
   t->waited = 0;
   t->exit_status = 0;
+  sema_init(&t->sema_w, 0);
+  sema_init(&t->sema_e, 0);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
