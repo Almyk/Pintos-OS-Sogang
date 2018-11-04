@@ -100,20 +100,16 @@ struct thread
     struct thread *parent;
     struct list childs;
     struct list_elem celem;
-    int waiting;
     int waited;
-
-    /* need to change/remove */
-    int child_exit_status;
-    int childtid;
-    /* --- */
+    int exit_status;
 
     // files
     int fd_cnt;
     struct file *files[128];
 
     // semaphores
-    struct semaphore sema;
+    struct semaphore sema_w; // syswait
+    struct semaphore sema_e; // sysexit
 
 #endif
 

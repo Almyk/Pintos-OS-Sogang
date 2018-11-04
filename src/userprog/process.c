@@ -24,7 +24,7 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
-void busy_waiting (struct thread*);
+//void busy_waiting (struct thread*);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -114,20 +114,17 @@ process_wait (tid_t child_tid UNUSED)
   /* 3.3.4 syscall code block */
   struct thread *curr = thread_current();
   struct thread *child = find_child_by_tid(child_tid);
+  int exit_status;
 
   if(!child) return -1;
 
   //busy_waiting(thread_current()); 
-  sema_down(&child->sema);
-
-  if(thread_current()->childtid == child_tid || child_tid != TID_ERROR)
-    {
-      //list_remove(&child->celem);
-      return thread_current()->child_exit_status;
-    }
-
+  sema_down(&child->sema_w); // wait for child to exit
+  exit_status =  child->exit_status; // receive childs exit status
+  sema_up(&child->sema_e); // unblock child
+  list_remove(&child->celem); // remove child from child list
+  return exit_status;
   /* end of 3.3.4 block */
-  return -1;
 }
 
 /* Free the current process's resources. */
@@ -566,10 +563,12 @@ install_page (void *upage, void *kpage, bool writable)
           && pagedir_set_page (th->pagedir, upage, kpage, writable));
 }
 
+/*
 void busy_waiting (struct thread *t)
 {
   while(t->waiting > 0) thread_yield();
 }
+*/
 
 struct thread *
 find_child_by_tid(tid_t child_tid)

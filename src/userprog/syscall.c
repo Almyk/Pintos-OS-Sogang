@@ -47,10 +47,12 @@ sysexit (int status)
   while((name[i] = t->name[i]) != ' ') i++;
   name[i] = '\0';
 
-  t->parent->child_exit_status = status;
-  t->parent->waiting -= 1;
-  sema_up(&t->sema);
+  t->exit_status = status;
+
+  //t->parent->child_exit_status = status;
+  sema_up(&t->sema_w); // unblock parent
   printf("%s: exit(%d)\n", name, status);
+  sema_down(&t->sema_e); // wait for parent to receive exit status
   thread_exit();
 }
 
