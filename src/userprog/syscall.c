@@ -32,6 +32,28 @@ static void syscall_handler (struct intr_frame *);
 
 /* 3.3.4 SystemCall -- Implementation of each functions */
 void
+verify (void *address)
+{
+  if(address == NULL) sysexit(-1);
+  if(!is_user_vaddr(address) || address <= (void*)0x8048000) sysexit(-1);
+  if(!pagedir_get_page(thread_current()->pagedir, address)) sysexit(-1);
+}
+
+void
+verify_address (void *address)
+{
+  verify(address);
+  verify(address+3);
+}
+
+void
+verify_arguments (void *esp, int cnt)
+{
+  int32_t *tmp = (int32_t) esp;
+  while(cnt--) verify_address(++tmp);
+}
+
+void
 syshalt (void)
 {
   shutdown_power_off();
@@ -155,8 +177,9 @@ sysfilesize (int fd)
 int
 sysread (int fd, void *buffer, unsigned size)
 {
-  if(!is_user_vaddr(buffer+size)) sysexit(-1);
+  if(!is_user_vaddr(buffer) || buffer <= 0x8048000) sysexit(-1);
   if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
+
   int success = 0;
 
   if(fd == 0)
@@ -184,7 +207,7 @@ sysread (int fd, void *buffer, unsigned size)
 int
 syswrite (int fd, const void *buffer, unsigned size)
 {
-  if(!is_user_vaddr(buffer)) sysexit(-1);
+  if(!is_user_vaddr(buffer) || buffer <= 0x8048000) sysexit(-1);
   if(!pagedir_get_page(thread_current()->pagedir, buffer+size)) sysexit(-1);
 
   int success = 0;
@@ -208,7 +231,7 @@ syswrite (int fd, const void *buffer, unsigned size)
 }
 
 void
-sysseek(int fd, unsigned position)
+sysseek (int fd, unsigned position)
 {
   lock_acquire(&filelock);
 
@@ -220,7 +243,7 @@ sysseek(int fd, unsigned position)
 }
 
 unsigned
-systell(int fd)
+systell (int fd)
 {
   lock_acquire(&filelock);
 
@@ -252,7 +275,7 @@ sysclose (int fd)
 
 /*project1 additional system calls*/
 int
-pibonacci(int n)
+pibonacci (int n)
 {
   int i;
   int f1 = 0;
@@ -272,10 +295,11 @@ pibonacci(int n)
 }
 
 int
-sum_of_four_integers(int a, int b, int c, int d)
+sum_of_four_integers (int a, int b, int c, int d)
 {
   return a+b+c+d;
 }
+
 
 void
 syscall_init (void) 
@@ -290,12 +314,17 @@ syscall_handler (struct intr_frame *f)
   /* 3.3.4 System Calls code block */
   
   // check if pointer is valid or not
-  if (f->esp == NULL || !is_user_vaddr(f->esp)) sysexit(-1);
-  if (!pagedir_get_page(thread_current()->pagedir, f->esp)) sysexit(-1);
+  //if (f->esp == NULL || !is_user_vaddr(f->esp)) sysexit(-1);
+  //if (!pagedir_get_page(thread_current()->pagedir, f->esp)) sysexit(-1);
 
+  int arg_cnt[] = {0,1,1,1,2,1,1,1,3,3,2,1,1,0,0,0,0,0,0,0,1,4};
   void *esp = f->esp;
+  verify_address(esp);
   int sysnum = *(int*)esp;
-  if(sysnum != SYS_HALT) if(!is_user_vaddr(esp+4)) sysexit(-1);
+  verify_arguments(esp, arg_cnt[sysnum]);
+
+
+  //if(sysnum != SYS_HALT) if(!is_user_vaddr(esp+4)) sysexit(-1);
 
   // remove : for debugging only
   //printf("\n--- syscall_handler ---\n\n");
@@ -318,8 +347,8 @@ syscall_handler (struct intr_frame *f)
         f->eax = sysread(*(int*)(esp+4), *(void**)(esp+8), *(unsigned*)(esp+12)); break;
       case SYS_WRITE: 
         f->eax = syswrite(*(int*)(esp+4), *(const void**)(esp+8), *(unsigned*)(esp+12)); break;
-      case SYS_SEEK: break;
-      case SYS_TELL: break;
+      case SYS_SEEK: sysseek(*(int*)(esp+4), *(unsigned*)(esp+8)); break;
+      case SYS_TELL: f->eax = systell(*(int*)(esp+4)); break;
       case SYS_CLOSE: sysclose(*(int*)(esp+4)); break;
       /*project 1 additional system calls*/ 
       case SYS_PIBO: f->eax = pibonacci(*(int*)(esp+4)); break;
