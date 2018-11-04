@@ -66,30 +66,14 @@ sysexec (const char *cmd_line)
 int
 syswait (pid_t pid)
 {
-  struct list_elem *e;
   if(pid == PID_ERROR) return PID_ERROR;
 
-  /*
+  // use waited flag to see if we have already waited for this pid
+  // instead of old system that used a linked list of all waited pids.
   struct thread *child = find_child_by_tid((tid_t) pid);
-  //if(!child)printf("child does not exit\n");
-  //printf("child pid: %d\n", pid);
-  //printf("child->waited: %d\n", child->waited);
   if(!child) return PID_ERROR;
   if(child->waited) return PID_ERROR;
   child->waited = 1;
-  */
-
-  for(e = list_begin(&wait_child_list);
-      e != list_end(&wait_child_list);
-      e = list_next(e))
-    {
-      if(list_entry(e, struct waitPid, wpelem)->pid == pid)
-        return PID_ERROR;
-    }
-
-  struct waitPid * new = palloc_get_page (0);
-  new->pid = pid;
-  list_push_back(&wait_child_list, &new->wpelem);
 
   return process_wait((tid_t) pid);
 }

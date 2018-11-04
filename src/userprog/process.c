@@ -112,13 +112,12 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   /* 3.3.4 syscall code block */
+  int exit_status;
   struct thread *curr = thread_current();
   struct thread *child = find_child_by_tid(child_tid);
-  int exit_status;
 
   if(!child) return -1;
 
-  //busy_waiting(thread_current()); 
   sema_down(&child->sema_w); // wait for child to exit
   exit_status =  child->exit_status; // receive childs exit status
   sema_up(&child->sema_e); // unblock child
