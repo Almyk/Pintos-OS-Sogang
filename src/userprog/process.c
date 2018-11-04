@@ -151,14 +151,14 @@ process_exit (void)
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
-  pd = cur->pagedir;
   while(fd-- > 2)
   {
     if(cur->files[fd]) file_close(cur->files[fd]);
   }
   palloc_free_page(cur->files+2);
-  if(cur->exe_file) file_close(cur->exe_file);
+  //if(cur->exe_file) file_close(cur->exe_file);
 
+  pd = cur->pagedir;
   if (pd != NULL) 
     {
       /* Correct ordering here is crucial.  We must set
@@ -308,8 +308,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
       goto done; 
     }
 
-  t->exe_file = file_reopen(file);
-  file_deny_write(t->exe_file);
   lock_release(&filelock);
 
   /* Read and verify executable header. */
@@ -397,7 +395,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  if(success)
+    {
+      file_deny_write(file);
+      t->exe_file = file;
+    }
+  else file_close(file);
+
   palloc_free_page (fn_copy); 
   return success;
 }

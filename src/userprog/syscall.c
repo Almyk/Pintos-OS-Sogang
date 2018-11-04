@@ -70,9 +70,10 @@ sysexit (int status)
   name[i] = '\0';
 
   t->exit_status = status;
+  file_close(t->exe_file);
 
-  sema_up(&t->sema_w); // unblock parent
   printf("%s: exit(%d)\n", name, status);
+  sema_up(&t->sema_w); // unblock parent
   sema_down(&t->sema_e); // wait for parent to receive exit status
 
   unblock_children(t); // unblock children that are waiting for parent
