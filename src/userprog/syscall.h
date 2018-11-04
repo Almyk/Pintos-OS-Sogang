@@ -7,4 +7,6 @@ void sysexit(int);
 int pibonacci(int);
 int sum_of_four_integers(int, int, int, int);
 
+extern struct lock filelock;
+
 #endif /* userprog/syscall.h */

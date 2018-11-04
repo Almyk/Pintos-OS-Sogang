@@ -280,7 +280,6 @@ sum_of_four_integers(int a, int b, int c, int d)
 void
 syscall_init (void) 
 {
-  list_init(&wait_child_list);
   lock_init(&filelock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }

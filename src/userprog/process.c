@@ -8,6 +8,7 @@
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "userprog/syscall.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -55,7 +56,14 @@ process_execute (const char *file_name)
   strlcpy (file_name_, file_name, PGSIZE);
   for(i = 0; file_name_[i] != ' ' && file_name_[i] != '\0'; i++);
   file_name_[i] = '\0';
-  if(!filesys_open(file_name_)) return TID_ERROR;
+
+  lock_acquire(&filelock);
+  if(!filesys_open(file_name_))
+    {
+      lock_release(&filelock);
+      return TID_ERROR;
+    }
+  lock_release(&filelock);
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
@@ -276,8 +284,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Open executable file. */
-  //printf("argv[0]: %s\n", argv[0]);
+  lock_acquire(&filelock);
   file = filesys_open (argv[0]);
+  lock_release(&filelock);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
