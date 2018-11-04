@@ -107,10 +107,12 @@ struct thread
     int fd_i; // file descriptor index
     struct file **files;
     struct file *exe_file; // currently executing file
+    bool loaded;
 
     // semaphores
     struct semaphore sema_w; // syswait
     struct semaphore sema_e; // sysexit
+    struct semaphore sema_l; // sysexecute/load
 
 #endif
 

@@ -492,8 +492,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->exe_file = NULL;
   t->waited = 0;
   t->exit_status = 0;
+  t->loaded = false;
   sema_init(&t->sema_w, 0);
   sema_init(&t->sema_e, 0);
+  sema_init(&t->sema_l, 0);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

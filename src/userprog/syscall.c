@@ -84,7 +84,18 @@ pid_t
 sysexec (const char *cmd_line)
 {
   if(!is_user_vaddr(cmd_line)) sysexit(-1);
-  return process_execute(cmd_line);
+  tid_t tid;
+  struct thread *child;
+
+  tid = process_execute(cmd_line);
+  if(tid == TID_ERROR) return TID_ERROR;
+
+  child = find_child_by_tid(tid);
+
+  sema_down(&child->sema_l); // wait for child to load
+  if(!child->loaded) return TID_ERROR; // check if load was successful
+
+  return tid;
 }
 
 int
