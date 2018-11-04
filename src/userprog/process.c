@@ -61,9 +61,11 @@ process_execute (const char *file_name)
   if(!filesys_open(file_name_))
     {
       lock_release(&filelock);
+      palloc_free_page(file_name_);
       return TID_ERROR;
     }
   lock_release(&filelock);
+  palloc_free_page(file_name_);
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
@@ -145,10 +147,18 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  int fd = cur->fd_i;
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
+  while(fd-- > 2)
+  {
+    if(cur->files[fd]) file_close(cur->files[fd]);
+  }
+  palloc_free_page(cur->files+2);
+  if(cur->exe_file) file_close(cur->exe_file);
+
   if (pd != NULL) 
     {
       /* Correct ordering here is crucial.  We must set
