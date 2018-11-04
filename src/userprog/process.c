@@ -584,3 +584,18 @@ find_child_by_tid(tid_t child_tid)
     }
   return NULL;
 }
+
+void
+unblock_children(struct thread *t)
+{
+  struct list_elem *e;
+  struct thread *child;
+  for(e = list_begin(&t->childs);
+      e != list_end(&t->childs);
+      e = list_next(e))
+    {
+      child = list_entry(e, struct thread, celem);
+      list_remove(&child->celem); // remove from child list
+      sema_up(&child->sema_e); // unblock child that wants to exit
+    }
+}
