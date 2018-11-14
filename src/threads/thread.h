@@ -100,13 +100,13 @@ struct thread
     struct thread *parent;
     struct list childs;
     struct list_elem celem;
-    int waited;
+    int waited;                         /* indicates process have called wait */
     int exit_status;
 
     // files
     int fd_i; // file descriptor index
     struct file **files;
-    struct file *exe_file; // currently executing file
+    struct file *exe_file;            // currently executing file, self pointer
     bool loaded;
 
     // semaphores
