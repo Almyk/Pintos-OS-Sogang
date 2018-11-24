@@ -145,6 +145,8 @@ thread_tick (void)
 
 #ifndef USERPROG
   /* Project 3 */
+  thread_wake_up ();
+
   if (thread_prior_aging == true)
     thread_aging ();
 #endif
@@ -625,6 +627,12 @@ allocate_tid (void)
 void
 thread_aging (void)
 {
+}
+
+void
+thread_wake_up (void)
+{
+  // look at first element in queue if it needs to wake up
 }
 
 /* 3.3.4 Syscall process_wait() code block */

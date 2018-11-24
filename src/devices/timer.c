@@ -30,6 +30,10 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
+void push_sleep_queue (struct thread *t);
+bool list_less (const struct list_elem *, const struct list_elem *, void *);
+struct list sleep_queue;
+
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
 void
@@ -37,6 +41,9 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+
+  /* Project 3 */
+  list_init (&sleep_queue);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -92,8 +99,13 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
+  thread_current()->sleep_start = start;
+  push_sleep_queue (thread_current());
+  thread_block ();
+  /*
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
+    */
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -244,3 +256,22 @@ real_time_delay (int64_t num, int32_t denom)
   ASSERT (denom % 1000 == 0);
   busy_wait (loops_per_tick * num / 1000 * TIMER_FREQ / (denom / 1000)); 
 }
+
+/* Adds thread t to queue of sleeping threads
+ * managed by thread_wake_up() every tick */
+void
+push_sleep_queue (struct thread *t)
+{
+  list_insert_ordered (&sleep_queue, &t->sleep_elem, list_less, NULL);
+}
+
+bool
+list_less (const struct list_elem *a,
+               const struct list_elem *b,
+               void *aux)
+{
+  struct thread *A = list_entry (a, struct thread, sleep_elem);
+  struct thread *B = list_entry (b, struct thread, sleep_elem);
+  return A->sleep_start < B->sleep_start ? true : false;
+}
+
