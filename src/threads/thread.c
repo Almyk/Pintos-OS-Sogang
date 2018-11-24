@@ -167,13 +167,11 @@ thread_create (const char *name, int priority,
                thread_func *function, void *aux) 
 {
   struct thread *t;
-  struct thread *p = thread_current();
   struct kernel_thread_frame *kf;
   struct switch_entry_frame *ef;
   struct switch_threads_frame *sf;
   tid_t tid;
   enum intr_level old_level;
-  static int first = 1;
 
   ASSERT (function != NULL);
 
@@ -187,6 +185,8 @@ thread_create (const char *name, int priority,
   tid = t->tid = allocate_tid ();
 
   /* project 1 code block */
+#ifdef USERPROG
+  struct thread *p = thread_current();
   t->parent = p;
   list_push_back(&p->childs, &t->celem);
 
@@ -194,6 +194,7 @@ thread_create (const char *name, int priority,
   if (t->files == NULL)
     return TID_ERROR;
   t->files -= 2;
+#endif
   /* end of proj1 code block */
   
 
@@ -485,6 +486,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
 
   // proj 1
+#ifdef USERPROG
   list_init(&t->childs);
 
   // proj 2
@@ -496,6 +498,7 @@ init_thread (struct thread *t, const char *name, int priority)
   sema_init(&t->sema_w, 0);
   sema_init(&t->sema_e, 0);
   sema_init(&t->sema_l, 0);
+#endif
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
