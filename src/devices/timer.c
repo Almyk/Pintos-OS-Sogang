@@ -275,7 +275,7 @@ thread_wake_up (void)
   int64_t ticks = timer_ticks ();
   struct list_elem *e;
   struct thread *t;
-  if (!list_empty (&sleep_queue))
+  while (!list_empty (&sleep_queue))
     {
       e = list_begin (&sleep_queue);
       t = list_entry (e, struct thread, sleep_elem);
@@ -284,6 +284,7 @@ thread_wake_up (void)
           list_pop_front (&sleep_queue);
           thread_unblock (t);
         }
+      else break;
     }
 }
 
