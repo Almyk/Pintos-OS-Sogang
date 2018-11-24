@@ -512,6 +512,10 @@ init_thread (struct thread *t, const char *name, int priority)
   sema_init(&t->sema_e, 0);
   sema_init(&t->sema_l, 0);
 #endif
+
+#ifndef USERPROG
+  t->priority = PRI_DEFAULT;
+#endif
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -648,7 +652,19 @@ thread_find_by_tid (tid_t tid)
 }
 
 /* end of 3.3.4 block */
-
+
+void thread_set_priority (int new_priority)
+{
+  thread_current ()->priority = new_priority;
+  // TODO: yield if not highest priority: use ready_list
+}
+
+int thread_get_priority (void)
+{
+  return thread_current ()->priority;
+  // TODO: check for donated priority, return highest
+}
+
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
