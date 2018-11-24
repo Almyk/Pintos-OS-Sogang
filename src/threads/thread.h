@@ -122,7 +122,7 @@ struct thread
 #endif
 
 #ifndef USERPROG
-    int64_t sleep_start;
+    int64_t sleep_wake;
     struct list_elem sleep_elem; // for sleep_queue in devices/timer.c
 #endif
 
@@ -169,6 +169,5 @@ int thread_get_load_avg (void);
 
 struct thread * thread_find_by_tid (tid_t);
 void thread_aging (void);
-void thread_wake_up (void);
 
 #endif /* threads/thread.h */

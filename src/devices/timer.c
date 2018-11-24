@@ -99,9 +99,12 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
-  thread_current()->sleep_start = start;
+  thread_current()->sleep_wake = start + ticks;
   push_sleep_queue (thread_current());
+
+  intr_disable ();
   thread_block ();
+  intr_enable ();
   /*
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
@@ -265,6 +268,25 @@ push_sleep_queue (struct thread *t)
   list_insert_ordered (&sleep_queue, &t->sleep_elem, list_less, NULL);
 }
 
+void
+thread_wake_up (void)
+{
+  // look at first element in queue if it needs to wake up
+  int64_t ticks = timer_ticks ();
+  struct list_elem *e;
+  struct thread *t;
+  if (!list_empty (&sleep_queue))
+    {
+      e = list_begin (&sleep_queue);
+      t = list_entry (e, struct thread, sleep_elem);
+      if (t->sleep_wake <= ticks)
+        {
+          list_pop_front (&sleep_queue);
+          thread_unblock (t);
+        }
+    }
+}
+
 bool
 list_less (const struct list_elem *a,
                const struct list_elem *b,
@@ -272,6 +294,6 @@ list_less (const struct list_elem *a,
 {
   struct thread *A = list_entry (a, struct thread, sleep_elem);
   struct thread *B = list_entry (b, struct thread, sleep_elem);
-  return A->sleep_start < B->sleep_start ? true : false;
+  return A->sleep_wake < B->sleep_wake ? true : false;
 }
 
