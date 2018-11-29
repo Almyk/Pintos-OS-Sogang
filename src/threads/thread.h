@@ -123,10 +123,9 @@ struct thread
 
 #ifndef USERPROG
     /* Project 3, Threads */
-    int priority;
+#endif
     int64_t sleep_wake;
     struct list_elem sleep_elem; // for sleep_queue in devices/timer.c
-#endif
 
 
     /* Owned by thread.c. */
@@ -173,5 +172,6 @@ struct thread * thread_find_by_tid (tid_t);
 void thread_aging (void);
 void thread_set_priority (int new_priority);
 int thread_get_priority (void);
+bool list_more (const struct list_elem *, const struct list_elem *, void *);
 
 #endif /* threads/thread.h */

@@ -295,6 +295,16 @@ list_less (const struct list_elem *a,
 {
   struct thread *A = list_entry (a, struct thread, sleep_elem);
   struct thread *B = list_entry (b, struct thread, sleep_elem);
-  return A->sleep_wake < B->sleep_wake ? true : false;
+  bool less;
+  bool eq;
+  bool prio;
+  bool ret = false;
+  less = A->sleep_wake <= B->sleep_wake ? true : false;
+  eq = A->sleep_wake == B->sleep_wake ? true : false;
+  prio = A->priority > B->priority ? true : false;
+  if(less) ret = true;
+  if(!prio && eq) ret = false;
+
+  return ret;
 }
 

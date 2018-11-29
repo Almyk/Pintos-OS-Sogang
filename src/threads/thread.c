@@ -11,6 +11,7 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "devices/timer.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -152,6 +153,7 @@ thread_tick (void)
 #endif
 }
 
+
 /* Prints thread statistics. */
 void
 thread_print_stats (void) 
@@ -272,7 +274,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  //list_push_back (&ready_list, &t->elem);
+  list_insert_ordered (&ready_list, &t->elem, list_more, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -343,7 +346,8 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    //list_push_back (&ready_list, &cur->elem);
+    list_insert_ordered (&ready_list, &cur->elem, list_more, NULL);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -370,7 +374,13 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  struct list_elem *e;
+  struct thread *t;
   thread_current ()->priority = new_priority;
+  e = list_begin(&ready_list);
+  t = list_entry(e, struct thread, allelem);
+  if(t->priority > new_priority)
+    thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -512,10 +522,6 @@ init_thread (struct thread *t, const char *name, int priority)
   sema_init(&t->sema_e, 0);
   sema_init(&t->sema_l, 0);
 #endif
-
-#ifndef USERPROG
-  t->priority = PRI_DEFAULT;
-#endif
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -631,6 +637,14 @@ allocate_tid (void)
 void
 thread_aging (void)
 {
+  struct list_elem *e;
+
+  for (e = list_begin (&all_list); e != list_end (&all_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      t->priority++;
+    }
 }
 
 /* 3.3.4 Syscall process_wait() code block */
@@ -653,16 +667,14 @@ thread_find_by_tid (tid_t tid)
 
 /* end of 3.3.4 block */
 
-void thread_set_priority (int new_priority)
+bool
+list_more (const struct list_elem *a,
+               const struct list_elem *b,
+               void *aux)
 {
-  thread_current ()->priority = new_priority;
-  // TODO: yield if not highest priority: use ready_list
-}
-
-int thread_get_priority (void)
-{
-  return thread_current ()->priority;
-  // TODO: check for donated priority, return highest
+  struct thread *A = list_entry (a, struct thread, sleep_elem);
+  struct thread *B = list_entry (b, struct thread, sleep_elem);
+  return A->priority > B->priority ? true : false;
 }
 
 /* Offset of `stack' member within `struct thread'.
