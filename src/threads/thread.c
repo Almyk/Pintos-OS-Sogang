@@ -98,6 +98,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&sleep_queue);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -238,6 +239,9 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
+  if(priority > thread_current()->priority)
+    thread_yield();
+
   return tid;
 }
 
@@ -374,13 +378,8 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  struct list_elem *e;
-  struct thread *t;
   thread_current ()->priority = new_priority;
-  e = list_begin(&ready_list);
-  t = list_entry(e, struct thread, allelem);
-  if(t->priority > new_priority)
-    thread_yield();
+  thread_yield ();
 }
 
 /* Returns the current thread's priority. */
@@ -639,10 +638,10 @@ thread_aging (void)
 {
   struct list_elem *e;
 
-  for (e = list_begin (&all_list); e != list_end (&all_list);
+  for (e = list_begin (&ready_list); e != list_end (&ready_list);
        e = list_next (e))
     {
-      struct thread *t = list_entry (e, struct thread, allelem);
+      struct thread *t = list_entry (e, struct thread, elem);
       t->priority++;
     }
 }

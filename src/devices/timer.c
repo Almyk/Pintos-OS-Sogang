@@ -41,9 +41,6 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
-
-  /* Project 3 */
-  list_init (&sleep_queue);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -98,6 +95,7 @@ timer_sleep (int64_t ticks)
 {
   int64_t start = timer_ticks ();
 
+#ifndef USERPROG
   ASSERT (intr_get_level () == INTR_ON);
   thread_current()->sleep_wake = start + ticks;
   push_sleep_queue (thread_current());
@@ -105,10 +103,10 @@ timer_sleep (int64_t ticks)
   intr_disable ();
   thread_block ();
   intr_enable ();
-  /*
+#elif
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
-    */
+#endif
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be

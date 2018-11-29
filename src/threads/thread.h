@@ -173,5 +173,6 @@ void thread_aging (void);
 void thread_set_priority (int new_priority);
 int thread_get_priority (void);
 bool list_more (const struct list_elem *, const struct list_elem *, void *);
+bool thread_not_highest_prio(void);
 
 #endif /* threads/thread.h */
