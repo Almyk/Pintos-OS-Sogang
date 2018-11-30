@@ -672,6 +672,15 @@ list_more (const struct list_elem *a,
 static
 void thread_aging (void)
 {
+  struct thread *t;
+  struct list_elem *e;
+
+  for (e = list_begin (&ready_list); e != list_end (&ready_list);
+      e = list_next (e))
+  {
+    t = list_entry (e, struct thread, elem);
+    t->priority++;
+  }
 }
 
 /* end of 3.3.4 block */
