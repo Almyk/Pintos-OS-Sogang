@@ -199,10 +199,10 @@ thread_create (const char *name, int priority,
   tid = t->tid = allocate_tid ();
 
   /* project 1 code block */
+  struct thread *cur = thread_current();
 #ifdef USERPROG
-  struct thread *p = thread_current();
-  t->parent = p;
-  list_push_back(&p->childs, &t->celem);
+  t->parent = cur;
+  list_push_back(&cur->childs, &t->celem);
 
   t->files = palloc_get_page(PAL_ZERO);
   if (t->files == NULL)
@@ -236,6 +236,9 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+
+  if(priority > cur->priority)
+    thread_yield ();
 
   return tid;
 }

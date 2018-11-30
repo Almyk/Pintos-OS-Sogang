@@ -70,7 +70,7 @@ sema_down (struct semaphore *sema)
   while (sema->value == 0) 
     {
 #ifdef USERPROG
-      list_push_back (&sema->waiters, &thread_current ()->elem); // go to last place in queue
+      list_push_back (&sema->waiters, &t->elem); // go to last place in queue
 #else
       /* Project 3 */
       list_insert_ordered (&sema->waiters, &t->elem, list_more, NULL);
