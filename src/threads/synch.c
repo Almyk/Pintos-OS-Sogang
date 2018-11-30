@@ -66,9 +66,15 @@ sema_down (struct semaphore *sema)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
+  struct thread *t = thread_current ();
   while (sema->value == 0) 
     {
+#ifdef USERPROG
       list_push_back (&sema->waiters, &thread_current ()->elem); // go to last place in queue
+#else
+      /* Project 3 */
+      list_insert_ordered (&sema->waiters, &t->elem, list_more, NULL);
+#endif
       thread_block (); // sleep
     }
   sema->value--;
@@ -118,6 +124,7 @@ sema_up (struct semaphore *sema)
                                 struct thread, elem));
   sema->value++;
   intr_set_level (old_level);
+  thread_yield ();
 }
 
 static void sema_test_helper (void *sema_);
