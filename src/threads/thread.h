@@ -121,6 +121,9 @@ struct thread
 
 #endif
 
+    /* Project 3 */
+    int64_t wake_up_tick; // used for timer_sleep ()
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
@@ -162,5 +165,7 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 struct thread * thread_find_by_tid(tid_t);
+bool list_more (const struct list_elem *, const struct list_elem *, void *);
+static void thread_aging (void);
 
 #endif /* threads/thread.h */

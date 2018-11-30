@@ -11,6 +11,7 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "devices/timer.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -272,7 +273,12 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+#ifdef USERPROG
   list_push_back (&ready_list, &t->elem);
+#else
+  /* Project 3 */
+  list_insert_ordered (&ready_list, &t->elem, list_more, NULL);
+#endif
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -343,7 +349,14 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
+  {
+#ifdef USERPROG
     list_push_back (&ready_list, &cur->elem);
+#else
+    /* Project 3 */
+    list_insert_ordered (&ready_list, &cur->elem, list_more, NULL);
+#endif
+  }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -371,6 +384,7 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+  thread_yield ();
 }
 
 /* Returns the current thread's priority. */
@@ -640,6 +654,21 @@ thread_find_by_tid (tid_t tid)
       if (t->tid == tid) return t;
     }
   return NULL;
+}
+
+bool
+list_more (const struct list_elem *a,
+                             const struct list_elem *b,
+                             void *aux)
+{
+  struct thread *A = list_entry (a, struct thread, elem);
+  struct thread *B = list_entry (b, struct thread, elem);
+  return A->priority > B->priority;
+}
+
+static
+void thread_aging (void)
+{
 }
 
 /* end of 3.3.4 block */
