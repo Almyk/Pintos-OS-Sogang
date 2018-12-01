@@ -55,6 +55,7 @@ static long long user_ticks;    /* # of timer ticks in user programs. */
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
 static unsigned thread_ticks;   /* # of timer ticks since last yield. */
+static int load_avg;            /* Project 3 BSD scheduler */
 
 #ifndef USERPROG
 /* Project 3 */
@@ -108,6 +109,7 @@ thread_init (void)
   /* project 3 */
   initial_thread->nice = 0;
   initial_thread->recent_cpu = 0;
+  load_avg = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -154,6 +156,16 @@ thread_tick (void)
 
   if (thread_prior_aging)
     thread_aging ();
+
+  if (thread_mlfqs)
+    {
+      if (timer_ticks () % TIMER_FREQ == 0)
+        {
+          eval_rcpu_lavg (); // recent_cpu, load_avg
+        }
+      if (timer_ticks () % 4 == 0)
+        eval_priority ();
+    }
 #endif
 }
 
@@ -414,7 +426,7 @@ thread_set_nice (int nice UNUSED)
   else if (nice < -20)
     nice = 20;
   t->nice = nice;
-  //t->priority = PRI_MAX - (t->recent_cpu / 4) - (t->nice * 2);
+  thread_priority (t, NULL);
   thread_yield ();
 }
 
@@ -429,8 +441,19 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return load_avg * 100;
+}
+
+void
+thread_eval_load_avg (void)
+{
+  int ready_threads;
+  if(!list_empty(&ready_list))
+    {
+      ready_threads = list_size(&ready_list) + (thread_current () == idle_thread ? 0 : 1);
+    }
+  else ready_threads = 0 + (thread_current () == idle_thread ? 0 : 1);
+  load_avg = xton(mul_f((ntof(59) / 60), ntof(load_avg)) + (ntof(1)/60) * ready_threads);
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
@@ -694,6 +717,35 @@ void thread_aging (void)
     t = list_entry (e, struct thread, elem);
     t->priority++;
   }
+}
+
+/* evaluates recent_cpu and load_avg for every thread */
+void
+eval_rcpu_lavg (void)
+{
+  thread_foreach (thread_rcpu_lavg, NULL);
+}
+
+/* evaluates priority for every thread */
+void
+eval_priority (void)
+{
+  thread_foreach (thread_priority, NULL);
+}
+
+/* thread_action_func for calculating recent_cpu & load_avg */
+void
+thread_rcpu_lavg (struct thread *t, void *aux UNUSED)
+{
+  t->recent_cpu = (2*load_avg) / (2*load_avg+1) * t->recent_cpu + t->nice;
+  thread_eval_load_avg ();
+}
+
+/* thread_action_func for calculating priority */
+void
+thread_priority (struct thread *t, void *aux UNUSED)
+{
+  t->priority = PRI_MAX - xton((div_n(t->recent_cpu, 4))) - (t->nice * 2);
 }
 
 /* end of 3.3.4 block */

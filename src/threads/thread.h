@@ -169,5 +169,9 @@ int thread_get_load_avg (void);
 struct thread * thread_find_by_tid(tid_t);
 bool list_more (const struct list_elem *, const struct list_elem *, void *);
 static void thread_aging (void);
+void eval_rcpu_lavg (void);
+void eval_priority (void);
+void thread_rcpu_lavg (struct thread *t, void *aux UNUSED);
+void thread_priority (struct thread *t, void *aux UNUSED);
 
 #endif /* threads/thread.h */
