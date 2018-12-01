@@ -6,8 +6,9 @@ alarm-multiple alarm-simultaneous alarm-priority alarm-zero		\
 alarm-negative priority-change priority-change-2 			\
 priority-fifo priority-preempt priority-sema \
 priority-aging \
-mlfqs-load-1 mlfqs-load-60 mlfqs-load-avg mlfqs-recent-1 mlfqs-fair-2	\
-mlfqs-fair-20 mlfqs-nice-2 mlfqs-nice-10 mlfqs-block)
+mlfqs-fair-20 mlfqs-fair-2 mlfqs-nice-2 mlfqs-nice-10 \
+mlfqs-block \
+mlfqs-load-1 mlfqs-load-60 mlfqs-load-avg mlfqs-recent-1)
 #priority-donate-one \
 #priority-donate-multiple priority-donate-multiple2			\
 #priority-donate-nest priority-donate-sema priority-donate-lower		\

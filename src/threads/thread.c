@@ -12,6 +12,7 @@
 #include "threads/synch.h"
 #include "threads/vaddr.h"
 #include "devices/timer.h"
+#include "threads/fpra.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -216,6 +217,7 @@ thread_create (const char *name, int priority,
 
   /* project 3 */
   t->nice = cur->nice;
+  t->recent_cpu = cur->recent_cpu;
 
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
@@ -412,7 +414,7 @@ thread_set_nice (int nice UNUSED)
   else if (nice < -20)
     nice = 20;
   t->nice = nice;
-  //t->priority = PRI_MAX - (thread_get_recent_cpu () / 4) - (nice * 2);
+  //t->priority = PRI_MAX - (t->recent_cpu / 4) - (t->nice * 2);
   thread_yield ();
 }
 
