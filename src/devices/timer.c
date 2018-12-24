@@ -103,7 +103,7 @@ timer_sleep (int64_t ticks)
   intr_disable ();
   thread_block ();
   intr_enable ();
-#elif
+#else
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
 #endif
