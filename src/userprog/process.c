@@ -18,6 +18,8 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "vm/frame.h"
+#include "vm/page.h"
 
 /* 3.3.4 syscall code block */
 #include "threads/synch.h"
@@ -487,9 +489,15 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
       /* Get a page of memory. */
+#ifndef VM
       uint8_t *knpage = palloc_get_page (PAL_USER);
+#else
+      uint8_t *knpage = allocate_frame (upage, PAL_USER); // proj4
+#endif
       if (knpage == NULL)
-        return false;
+        {
+          return false;
+        }
 
       /* Load this page. */
       if (file_read (file, knpage, page_read_bytes) != (int) page_read_bytes)
@@ -525,7 +533,11 @@ setup_stack (void **esp, char **argv, int argc)
   uint8_t *addr[argc];
   int i;
 
+#ifndef VM
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+#else
+  kpage = allocate_frame (((uint8_t *) PHYS_BASE) - PGSIZE, PAL_USER | PAL_ZERO);
+#endif
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
