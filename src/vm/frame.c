@@ -97,7 +97,7 @@ evict_frame (void *upage, struct thread *t)
 }
 
 uint8_t
-get_pte_flags(uint32_t pagedir, void *page)
+get_pte_flags(uint32_t *pagedir, void *page)
 {
   bool accessed = pagedir_is_accessed (pagedir, page);
   bool dirty = pagedir_is_dirty (pagedir, page);
@@ -106,4 +106,5 @@ get_pte_flags(uint32_t pagedir, void *page)
   if(!accessed && dirty) return 2;
   if(accessed && !dirty) return 3;
   if(accessed && dirty) return 4;
+  return 1;
 }

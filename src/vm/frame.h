@@ -7,6 +7,8 @@
 #include "threads/malloc.h"
 #include "threads/palloc.h"
 #include "threads/thread.h"
+#include "userprog/pagedir.h"
+#include "filesys/off_t.h"
 
 struct fte
   {
@@ -30,5 +32,5 @@ unsigned ft_hash (const struct hash_elem *e, void *aux);
 bool ft_less (const struct hash_elem *a, const struct hash_elem *b, void *aux);
 uint8_t * allocate_frame (void *upage, enum palloc_flags flag);
 void * evict_frame (void *upage, struct thread *t);
-uint8_t get_pte_flags(uint32_t pagedir, void *page);
+uint8_t get_pte_flags(uint32_t *pagedir, void *page);
 #endif

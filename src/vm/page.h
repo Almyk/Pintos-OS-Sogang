@@ -18,6 +18,7 @@ struct spte
   {
     void *vaddr; // virtual address
     uint8_t type; // type of memory reference
+    struct file *file;
     off_t offset; // file offset
     uint32_t read_bytes;
     uint32_t zero_bytes;
