@@ -8,8 +8,8 @@
 #include "threads/palloc.h"
 #include "filesys/file.h"
 
-struct spte * page_zero (void);
-struct spte * page_file (struct file *, off_t , size_t , bool);
+struct spte * create_zero_page (void);
+struct spte * create_file_page (struct file *, off_t , size_t , bool);
 //struct spte * page_swap (struct swap_entry *);
 
 enum { file, swap, zero }; // type of memory reference

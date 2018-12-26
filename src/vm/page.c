@@ -3,7 +3,7 @@
 #include "threads/malloc.h"
 
 struct spte *
-page_zero (void)
+create_zero_page (void)
 {
   struct spte *p = (struct spte *) malloc (sizeof (struct spte));
   p->type = zero;
@@ -14,7 +14,7 @@ page_zero (void)
 }
 
 struct spte *
-page_file (struct file *src, off_t offset, size_t zero_bytes, bool writable)
+create_file_page (struct file *src, off_t offset, size_t zero_bytes, bool writable)
 {
   struct spte *p = (struct spte *) malloc (sizeof (struct spte));
   p->type = file;
