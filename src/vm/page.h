@@ -8,6 +8,10 @@
 #include "threads/palloc.h"
 #include "filesys/file.h"
 
+struct spte * page_zero (void);
+struct spte * page_file (struct file *, off_t , size_t , bool);
+//struct spte * page_swap (struct swap_entry *);
+
 enum { file, swap, zero }; // type of memory reference
 
 struct spte
@@ -18,6 +22,7 @@ struct spte
     uint32_t read_bytes;
     uint32_t zero_bytes;
     bool writable; // is file writable?
+    struct swap_entry *swap_elem;
   };
 
 #endif

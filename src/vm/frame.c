@@ -4,7 +4,7 @@ static struct hash ft;
 static struct lock ft_lock;
 
 void
-ft_init ()
+ft_init (void)
 {
   hash_init(&ft, ft_hash, ft_less, NULL);
   lock_init(&ft_lock);

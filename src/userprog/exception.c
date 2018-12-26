@@ -150,7 +150,14 @@ page_fault (struct intr_frame *f)
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
+
+#ifndef VM
   if(!user || is_kernel_vaddr(fault_addr) || not_present) sysexit(-1);
+#else
+  // PTE_ADDR sets offset bits to 0, so we get page #
+  void *fault_page = (void *) (PTE_ADDR & (uint32_t) fault_addr);
+  struct thread *t = thread_current();
+#endif
 
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to

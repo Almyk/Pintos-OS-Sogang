@@ -6,12 +6,22 @@
 #include "threads/synch.h"
 #include "threads/malloc.h"
 #include "threads/palloc.h"
+#include "threads/thread.h"
 
 struct fte
   {
     uint8_t *vaddr; // virtual address, user space
     uint8_t *kaddr; // physical address, kernel space
     struct thread *thread; // thread that frame belongs to
+
+    // info on file
+    uint8_t type; // type of memory reference
+    off_t offset; // file offset
+    uint32_t read_bytes;
+    uint32_t zero_bytes;
+    bool writable; // is file writable?
+    struct file *file;
+
     struct hash_elem elem;
   };
 
